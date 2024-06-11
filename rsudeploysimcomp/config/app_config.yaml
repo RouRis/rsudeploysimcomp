@@ -1,0 +1,7 @@
+general:
+sumo_interface:
+  fcd_parser:
+    path: ../data/fcd_files/test_fcd
+    grid_size: 9
+garsud:
+pmcp_b:
