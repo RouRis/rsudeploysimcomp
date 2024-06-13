@@ -1,3 +1,4 @@
 # List required packages in this file, one per line.
 pyyaml
+pre-commit
 numpy

@@ -1,11 +1,12 @@
-import xml.etree.ElementTree as ET
-import numpy as np
 import gzip
+import xml.etree.ElementTree as ET
+
+import numpy as np
 
 from rsudeploysimcomp.utils.config_loader import load_config
 
 config = load_config()
-path_to_fcd_xml = config['sumo_interface']['xml_parser']['path_to_fcd_xml']
+path_to_fcd_xml = config["sumo_interface"]["xml_parser"]["path_to_fcd_xml"]
 
 
 def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
@@ -21,14 +22,14 @@ def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
         The value of the specified attribute, or None if the tag or attribute is not found.
     """
     try:
-        with gzip.open(gz_file_path, 'rb') as f_in:
+        with gzip.open(gz_file_path, "rb") as f_in:
             # Create an iterator to parse the XML incrementally
-            context = ET.iterparse(f_in, events=('start', 'end'))
+            context = ET.iterparse(f_in, events=("start", "end"))
 
             # Iterate through the parsed elements
             for event, elem in context:
                 # Check if the current element matches the specified tag
-                if event == 'start' and elem.tag == tag_name:
+                if event == "start" and elem.tag == tag_name:
                     # Extract the specified attribute
                     attribute_value = elem.get(attribute_name)
 
@@ -47,12 +48,12 @@ def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
 
 
 def parse_max_xy():
-    path_to_net_xml_gx = config['sumo_interface']['xml_parser']['path_to_net_xml_zip']
-    conv_boundary = find_element_attribute_in_xml_gz(path_to_net_xml_gx, 'location', 'convBoundary')
+    path_to_net_xml_gx = config["sumo_interface"]["xml_parser"]["path_to_net_xml_zip"]
+    conv_boundary = find_element_attribute_in_xml_gz(path_to_net_xml_gx, "location", "convBoundary")
     if conv_boundary is None:
         return -1, -1
     else:
-        conv_boundary_values = [float(x) for x in conv_boundary.split(',')]
+        conv_boundary_values = [float(x) for x in conv_boundary.split(",")]
         x_max = conv_boundary_values[2]
         y_max = conv_boundary_values[3]
         return x_max, y_max
@@ -60,7 +61,7 @@ def parse_max_xy():
 
 class PmcpBParser:
     def __init__(self):
-        self.grid_size = int(config['sumo_interface']['xml_parser']['grid_size'])  # Number of cells per dimension
+        self.grid_size = int(config["sumo_interface"]["xml_parser"]["grid_size"])  # Number of cells per dimension
         self.vehicle_count = np.zeros((self.grid_size, self.grid_size), dtype=int)
         self.x_max, self.y_max = parse_max_xy()
         self.x_min, self.y_min = 0, 0
@@ -99,11 +100,11 @@ class PmcpBParser:
             tree = ET.parse(path_to_fcd_xml)
             root = tree.getroot()
             # Iterate over each timestep
-            for timestep in root.findall('timestep'):
+            for timestep in root.findall("timestep"):
                 # Iterate over each vehicle within the timestep
-                for vehicle in timestep.findall('vehicle'):
-                    x = float(vehicle.get('x'))
-                    y = float(vehicle.get('y'))
+                for vehicle in timestep.findall("vehicle"):
+                    x = float(vehicle.get("x"))
+                    y = float(vehicle.get("y"))
                     x_index, y_index = self.get_grid_cell(x, y)
                     self.vehicle_count[y_index, x_index] += 1
 
