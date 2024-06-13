@@ -20,8 +20,8 @@ jobs:
 
       - name: Set Git identity
         run: |
-          git config --global user.name "Your Name"
-          git config --global user.email "you@example.com"
+          git config --global user.name "Rouven Rischert"
+          git config --global user.email "rischertrouven@gmail.com"
 
       - name: Install pre-commit
         run: |
