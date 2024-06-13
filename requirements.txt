@@ -2,3 +2,4 @@
 pyyaml
 pre-commit
 numpy
+scipy
