@@ -12,8 +12,27 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - uses: pre-commit/action@v3.0.0
-        with:
-          extra_args: --all-files
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2  # Adjust version if needed
+
+      - name: Set Git identity
+        run: |
+          git config --global user.name "Your Name"
+          git config --global user.email "you@example.com"
+
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+          pre-commit install --install-hooks
+
+      - name: Run pre-commit
+        run: |
+          pre-commit run --show-diff-on-failure --all-files || ( git status; git diff; git add . ; git commit -m "pre-commit fixes" )
+
+      - name: Push changes (if any)
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          git push
