@@ -112,4 +112,5 @@ class PmcpBParser:
 
 
 pmcp_b_parser = PmcpBParser()
+print("2")
 print(pmcp_b_parser.vehicle_count)
