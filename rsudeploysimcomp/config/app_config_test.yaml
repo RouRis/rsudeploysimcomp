@@ -1,0 +1,8 @@
+general:
+sumo_interface:
+  xml_parser:
+    path_to_fcd_xml: ../data/fcd_files/Test/sumoTrace.xml
+    path_to_net_xml_zip: ../data/net_files/Test/osm.net.xml.gz
+    grid_size: 9
+garsud:
+pmcp_b:

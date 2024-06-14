@@ -6,8 +6,9 @@ from scipy.sparse import csr_matrix, lil_matrix
 
 from rsudeploysimcomp.utils.config_loader import load_config
 
-config = load_config()
-path_to_fcd_xml = config["sumo_interface"]["xml_parser"]["path_to_fcd_xml"]
+config_test = load_config("test")
+config_sim = load_config("sim")
+path_to_fcd_xml = config_test["sumo_interface"]["xml_parser"]["path_to_fcd_xml"]
 
 
 def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
@@ -49,7 +50,7 @@ def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
 
 
 def parse_max_xy():
-    path_to_net_xml_gx = config["sumo_interface"]["xml_parser"]["path_to_net_xml_zip"]
+    path_to_net_xml_gx = config_test["sumo_interface"]["xml_parser"]["path_to_net_xml_zip"]
     conv_boundary = find_element_attribute_in_xml_gz(path_to_net_xml_gx, "location", "convBoundary")
     if conv_boundary is None:
         return -1, -1
@@ -62,7 +63,7 @@ def parse_max_xy():
 
 class PmcpBParser:
     def __init__(self):
-        self.grid_size = int(config["sumo_interface"]["xml_parser"]["grid_size"])  # Number of cells per dimension
+        self.grid_size = int(config_test["sumo_interface"]["xml_parser"]["grid_size"])  # Number of cells per dimension
         self.M = np.zeros((self.grid_size, self.grid_size), dtype=int)
         self.P = lil_matrix(
             (self.grid_size * self.grid_size, self.grid_size * self.grid_size), dtype=float
