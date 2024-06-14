@@ -80,3 +80,8 @@ target/
 
 # Ipython Notebook
 .ipynb_checkpoints
+
+
+# Data Directories which contain files too big for git push
+rsudeploysimcomp/data/fcd_files/Sim
+rsudeploysimcomp/data/net_files/Sim
