@@ -1,7 +1,8 @@
 import gzip
 import xml.etree.ElementTree as ET
-from scipy.sparse import lil_matrix, csr_matrix
+
 import numpy as np
+from scipy.sparse import csr_matrix, lil_matrix
 
 from rsudeploysimcomp.utils.config_loader import load_config
 
@@ -63,7 +64,9 @@ class PmcpBParser:
     def __init__(self):
         self.grid_size = int(config["sumo_interface"]["xml_parser"]["grid_size"])  # Number of cells per dimension
         self.M = np.zeros((self.grid_size, self.grid_size), dtype=int)
-        self.P = lil_matrix((self.grid_size * self.grid_size, self.grid_size * self.grid_size), dtype=float)  # Sparse migration matrix
+        self.P = lil_matrix(
+            (self.grid_size * self.grid_size, self.grid_size * self.grid_size), dtype=float
+        )  # Sparse migration matrix
         self.x_max, self.y_max = parse_max_xy()
         self.x_min, self.y_min = 0, 0
         self.generate_matrix_m_and_p()
@@ -117,13 +120,13 @@ class PmcpBParser:
 
                     # Update the vehicle's current location
                     if vehicle_id not in vehicle_locations:
-                        vehicle_locations[vehicle_id] = {'previous': None, 'current': current_cell}
+                        vehicle_locations[vehicle_id] = {"previous": None, "current": current_cell}
                     else:
-                        vehicle_locations[vehicle_id]['previous'] = vehicle_locations[vehicle_id]['current']
-                        vehicle_locations[vehicle_id]['current'] = current_cell
+                        vehicle_locations[vehicle_id]["previous"] = vehicle_locations[vehicle_id]["current"]
+                        vehicle_locations[vehicle_id]["current"] = current_cell
 
                     # If the vehicle has a previous location, update matrix P
-                    previous_cell = vehicle_locations[vehicle_id]['previous']
+                    previous_cell = vehicle_locations[vehicle_id]["previous"]
                     if previous_cell is not None and previous_cell != current_cell:
                         from_index = previous_cell[0] * self.grid_size + previous_cell[1]
                         to_index = current_cell[0] * self.grid_size + current_cell[1]
