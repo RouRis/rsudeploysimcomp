@@ -6,3 +6,4 @@ sumo_interface:
     grid_size: 9
 garsud:
 pmcp_b:
+    max_rsus: 5

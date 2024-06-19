@@ -62,14 +62,16 @@ def parse_max_xy():
 
 
 class PmcpBParser:
-    def __init__(self):
-        self.grid_size = int(config_test["sumo_interface"]["xml_parser"]["grid_size"])  # Number of cells per dimension
+    def __init__(self, grid_size):
+        self.grid_size = grid_size  # Number of cells per dimension
         self.M = np.zeros((self.grid_size, self.grid_size), dtype=int)
         self.P = lil_matrix(
             (self.grid_size * self.grid_size, self.grid_size * self.grid_size), dtype=float
         )  # Sparse migration matrix
         self.x_max, self.y_max = parse_max_xy()
         self.x_min, self.y_min = 0, 0
+        self.vehicle_paths = {}
+        self.location_vehicles = {}
         self.generate_matrix_m_and_p()
 
     def get_grid_cell(self, x, y):
@@ -119,6 +121,17 @@ class PmcpBParser:
                     current_cell = self.get_grid_cell(x, y)
                     vehicle_ids[current_cell[0]][current_cell[1]].add(vehicle_id)
 
+                    # Update vehicle_paths dictionary
+                    if vehicle_id not in self.vehicle_paths:
+                        self.vehicle_paths[vehicle_id] = set()
+                    self.vehicle_paths[vehicle_id].add(current_cell)
+
+                    # Update location_vehicles dictionary
+                    cell_key = (current_cell[0], current_cell[1])
+                    if cell_key not in self.location_vehicles:
+                        self.location_vehicles[cell_key] = set()
+                    self.location_vehicles[cell_key].add(vehicle_id)
+
                     # Update the vehicle's current location
                     if vehicle_id not in vehicle_locations:
                         vehicle_locations[vehicle_id] = {"previous": None, "current": current_cell}
@@ -149,6 +162,3 @@ class PmcpBParser:
         self.P = self.P.tocsr()
 
 
-pmcp_b_parser = PmcpBParser()
-print(pmcp_b_parser.M)
-print(pmcp_b_parser.P)
