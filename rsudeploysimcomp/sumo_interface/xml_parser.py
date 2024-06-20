@@ -2,7 +2,7 @@ import gzip
 import xml.etree.ElementTree as ET
 
 import numpy as np
-from scipy.sparse import csr_matrix, lil_matrix
+from scipy.sparse import lil_matrix
 
 from rsudeploysimcomp.utils.config_loader import load_config
 
@@ -72,7 +72,7 @@ class PmcpBParser:
         self.x_min, self.y_min = 0, 0
         self.vehicle_paths = {}
         self.location_vehicles = {}
-        self.generate_matrix_m_and_p()
+        self.parse_xml()
 
     def get_grid_cell(self, x, y):
         """
@@ -95,7 +95,7 @@ class PmcpBParser:
 
         return x_index, y_index
 
-    def generate_matrix_m_and_p(self):
+    def parse_xml(self):
         """
         Generates a 2D matrix of vehicle counts within a grid (matrix M)
         and a matrix of migration ratios between adjacent grid cells (matrix P).
@@ -160,5 +160,3 @@ class PmcpBParser:
         except Exception as e:
             print(f"An error occurred while processing the XML file: {e}")
         self.P = self.P.tocsr()
-
-
