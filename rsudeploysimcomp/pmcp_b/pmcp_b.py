@@ -1,12 +1,3 @@
-# Init Set of all locations (all_locations)
-# Init Empty Set of picked locations (picked_locations)
-# Init RSU Counter
-# Define FlowProjection Method
-# First iteration: Location with highest Vehicle Number
-# After: See Paper
-# Alg: While-loop over projection flow and picking the highest projection
-# Return the picked_locations
-
 import numpy as np
 
 

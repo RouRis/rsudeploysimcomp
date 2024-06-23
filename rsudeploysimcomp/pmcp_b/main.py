@@ -1,5 +1,5 @@
 from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
-from rsudeploysimcomp.sumo_interface.xml_parser import PmcpBParser
+from rsudeploysimcomp.sumo_interface.xml_parser import SUMOParser
 from rsudeploysimcomp.utils.config_loader import load_config
 
 config = load_config("test")
@@ -7,7 +7,7 @@ config = load_config("test")
 
 grid_size = int(config["sumo_interface"]["xml_parser"]["grid_size"])
 max_rsus = config["pmcp_b"]["max_rsus"]
-pmcp_b_parser = PmcpBParser(grid_size)
+pmcp_b_parser = SUMOParser(grid_size)
 
 
 loc = pmcp_b_parser.location_vehicles.get((3, 4))

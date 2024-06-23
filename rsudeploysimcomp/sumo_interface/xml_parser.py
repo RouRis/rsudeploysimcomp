@@ -61,7 +61,7 @@ def parse_max_xy():
         return x_max, y_max
 
 
-class PmcpBParser:
+class SUMOParser:
     def __init__(self, grid_size):
         self.grid_size = grid_size  # Number of cells per dimension
         self.M = np.zeros((self.grid_size, self.grid_size), dtype=int)
