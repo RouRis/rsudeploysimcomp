@@ -1,9 +1,8 @@
 class DensityBased:
-    def __init__(self, pmcpbparser, max_rsus):
-        self.pmcpBParser = pmcpbparser
+    def __init__(self, sumoparser, max_rsus):
         self.max_rsus = max_rsus
-        self.grid_size = self.pmcpBParser.grid_size
-        self.M = self.pmcpBParser.M
+        self.grid_size = sumoparser.grid_size
+        self.M = sumoparser.M
         self.picked_locations = set()
         self.run()
 

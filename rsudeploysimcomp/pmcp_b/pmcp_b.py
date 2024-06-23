@@ -2,11 +2,11 @@ import numpy as np
 
 
 class PMCB_P:
-    def __init__(self, pmcpBParser, max_rsus):
-        self.pmcpBParser = pmcpBParser
-        self.grid_size = pmcpBParser.grid_size  # Number of cells per dimension
-        self.M = pmcpBParser.M  # 2D array with vehicle counts
-        self.P = pmcpBParser.P  # 2D array (sparsed) with migration ratios between locations
+    def __init__(self, sumoparser, max_rsus):
+        self.pmcpBParser = sumoparser
+        self.grid_size = sumoparser.grid_size  # Number of cells per dimension
+        self.M = sumoparser.M  # 2D array with vehicle counts
+        self.P = sumoparser.P  # 2D array (sparsed) with migration ratios between locations
         self.max_rsus = max_rsus  # Maximum number of RSUs to be deployed
         self.location_flows = np.zeros((self.grid_size, self.grid_size))
         self.remaining_locations = set((x, y) for x in range(self.grid_size) for y in range(self.grid_size))
@@ -15,8 +15,7 @@ class PMCB_P:
         self.run()
 
     def run(self):
-        while self.rsu_counter <= self.max_rsus and len(self.remaining_locations) > 0:
-            print(self.location_flows)
+        while self.rsu_counter < self.max_rsus and len(self.remaining_locations) > 0:
             self.update_projected_flows()
             self.pick_next_location()
             self.rsu_counter += 1
