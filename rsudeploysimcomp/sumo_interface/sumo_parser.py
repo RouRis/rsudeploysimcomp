@@ -114,12 +114,23 @@ class SUMOParser:
             print(f"An error occurred while parsing junctions: {e}")
 
     def generate_matrix_m_and_p(self):
+        """
+        Generates a 2D matrix of vehicle counts within a grid (matrix M)
+        and a matrix of migration ratios between adjacent grid cells (matrix P).
+
+        Returns:
+            numpy.ndarray: 2D matrix M, representing vehicle counts in each grid cell.
+            numpy.ndarray: 2D matrix P, representing migration ratios between adjacent grid cells.
+        """
         vehicle_locations = {}
         vehicle_ids = [[set() for _ in range(self.grid_size)] for _ in range(self.grid_size)]
         try:
+            # Parse the XML file
             tree = ET.parse(path_to_fcd_xml)
             root = tree.getroot()
+            # Iterate over each timestep
             for timestep in root.findall("timestep"):
+                # Iterate over each vehicle within the timestep
                 for vehicle in timestep.findall("vehicle"):
                     vehicle_id = vehicle.get("id")
                     x = float(vehicle.get("x"))
@@ -127,6 +138,18 @@ class SUMOParser:
                     current_cell = self.get_grid_cell(x, y)
                     vehicle_ids[current_cell[0]][current_cell[1]].add(vehicle_id)
 
+                    # Update vehicle_paths dictionary
+                    if vehicle_id not in self.vehicle_paths:
+                        self.vehicle_paths[vehicle_id] = set()
+                    self.vehicle_paths[vehicle_id].add(current_cell)
+
+                    # Update location_vehicles dictionary
+                    cell_key = (current_cell[0], current_cell[1])
+                    if cell_key not in self.location_vehicles:
+                        self.location_vehicles[cell_key] = set()
+                    self.location_vehicles[cell_key].add(vehicle_id)
+
+                    # Update the vehicle's current location
                     if vehicle_id not in vehicle_locations:
                         vehicle_locations[vehicle_id] = {"previous": None, "current": current_cell}
                     else:
@@ -135,23 +158,15 @@ class SUMOParser:
 
                     previous_cell = vehicle_locations[vehicle_id]["previous"]
 
-                    # Update vehicle_paths dictionary, ensuring uniqueness
-                    if vehicle_id not in self.vehicle_paths:
-                        self.vehicle_paths[vehicle_id] = []
-                    if (
-                        current_cell != previous_cell
-                    ):  # Add only if the current cell is different from the previous cell
-                        self.vehicle_paths[vehicle_id].append(current_cell)
-
                     if previous_cell is not None and previous_cell != current_cell:
                         from_index = previous_cell[0] * self.grid_size + previous_cell[1]
                         to_index = current_cell[0] * self.grid_size + current_cell[1]
                         self.P[from_index, to_index] += 1
-
+            # Count the number of unique vehicles for each grid cell
             for i in range(self.grid_size):
                 for j in range(self.grid_size):
                     self.M[i, j] = len(vehicle_ids[i][j])
-
+            # Normalize matrix P to get migration ratios
             for i in range(self.P.shape[0]):
                 row_sum = np.sum(self.P[i])
                 if row_sum > 0:

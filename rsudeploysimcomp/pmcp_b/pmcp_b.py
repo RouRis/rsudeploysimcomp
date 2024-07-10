@@ -3,7 +3,7 @@ import numpy as np
 
 class PMCB_P:
     def __init__(self, sumoparser, max_rsus):
-        self.pmcpBParser = sumoparser
+        self.sumoparser = sumoparser
         self.grid_size = sumoparser.grid_size  # Number of cells per dimension
         self.M = sumoparser.M  # 2D array with vehicle counts
         self.P = sumoparser.P  # 2D array (sparsed) with migration ratios between locations
@@ -73,11 +73,11 @@ class PMCB_P:
         print(f"Picked location {next_location} with projected flow {self.location_flows[next_location]}")
 
     def update_M(self, picked_location):
-        location_vehicle = self.pmcpBParser.location_vehicles[picked_location]
+        location_vehicle = self.sumoparser.location_vehicles[picked_location]
         for vehicle in location_vehicle:
-            if vehicle in self.pmcpBParser.vehicle_paths:
-                self.pmcpBParser.vehicle_paths.pop(vehicle)
-        self.M = self.generate_M(self.pmcpBParser.vehicle_paths)
+            if vehicle in self.sumoparser.vehicle_paths:
+                self.sumoparser.vehicle_paths.pop(vehicle)
+        self.M = self.generate_M(self.sumoparser.vehicle_paths)
 
     def generate_M(self, vehicle_paths):
         new_M = np.zeros((self.grid_size, self.grid_size), dtype=int)  # Reset the matrix

@@ -29,9 +29,6 @@ def main():
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations.csv")
 
-    for junction in parser.junctions:
-        print(f"Junction {junction['id']} at ({junction['x']}, {junction['y']}) of type {junction['type']}")
-
 
 if __name__ == "__main__":
     main()
