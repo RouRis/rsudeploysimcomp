@@ -102,12 +102,14 @@ class SUMOParser:
                 tree = ET.parse(f_in)
                 root = tree.getroot()
                 for junction in root.findall("junction"):
-                    self.junctions.append({
-                        "id": junction.get("id"),
-                        "x": float(junction.get("x")),
-                        "y": float(junction.get("y")),
-                        "type": junction.get("type")
-                    })
+                    self.junctions.append(
+                        {
+                            "id": junction.get("id"),
+                            "x": float(junction.get("x")),
+                            "y": float(junction.get("y")),
+                            "type": junction.get("type"),
+                        }
+                    )
         except Exception as e:
             print(f"An error occurred while parsing junctions: {e}")
 
@@ -136,7 +138,9 @@ class SUMOParser:
                     # Update vehicle_paths dictionary, ensuring uniqueness
                     if vehicle_id not in self.vehicle_paths:
                         self.vehicle_paths[vehicle_id] = []
-                    if current_cell != previous_cell:  # Add only if the current cell is different from the previous cell
+                    if (
+                        current_cell != previous_cell
+                    ):  # Add only if the current cell is different from the previous cell
                         self.vehicle_paths[vehicle_id].append(current_cell)
 
                     if previous_cell is not None and previous_cell != current_cell:

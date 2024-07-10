@@ -1,10 +1,8 @@
 from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
-from rsudeploysimcomp.sumo_interface.sumo_parser import SUMOParser
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RsuDeployment
+from rsudeploysimcomp.sumo_interface.sumo_parser import SUMOParser
 from rsudeploysimcomp.utils.config_loader import load_config
 from rsudeploysimcomp.vehicle_density_based.densitybased import DensityBased
-
-import os
 
 config = load_config("test")
 # config = load_config("sim")
@@ -17,6 +15,7 @@ pmcb_p = PMCB_P(pmcp_b_parser, max_rsus)
 densitybased = DensityBased(pmcp_b_parser, max_rsus)
 print(pmcb_p.picked_locations)
 print(densitybased.picked_locations)
+
 
 def main():
     grid_size = 10  # Set grid size here
@@ -32,6 +31,7 @@ def main():
 
     for junction in parser.junctions:
         print(f"Junction {junction['id']} at ({junction['x']}, {junction['y']}) of type {junction['type']}")
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class RsuDeployment:
     def __init__(self, sumo_parser, max_rsus):
         self.sumo_parser = sumo_parser
