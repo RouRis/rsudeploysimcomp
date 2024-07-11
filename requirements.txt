@@ -4,3 +4,4 @@ pre-commit
 numpy
 scipy
 pandas
+pygad

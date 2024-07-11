@@ -10,11 +10,11 @@ def main():
     # config = load_config("sim")
 
     grid_size = int(config["sumo_interface"]["xml_parser"]["grid_size"])  # Set grid size here
-    max_rsus = config["pmcp_b"]["max_rsus"]  # Set maximum number of RSUs here
+    num_rsus = config["pmcp_b"]["num_rsus"]  # Set maximum number of RSUs here
 
     parser = SUMOParser(grid_size=grid_size)
-    pmcp = PMCB_P(parser, max_rsus)
-    density_based = DensityBased(parser, max_rsus)
+    pmcp = PMCB_P(parser, num_rsus)
+    density_based = DensityBased(parser, num_rsus)
     rsu_deployment = RSU_SIM_Interface()
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations_pmcp.csv", pmcp.picked_junctions)
