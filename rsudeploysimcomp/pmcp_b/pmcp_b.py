@@ -11,6 +11,7 @@ class PMCB_P:
         self.location_flows = np.zeros((self.grid_size, self.grid_size))
         self.remaining_locations = set((x, y) for x in range(self.grid_size) for y in range(self.grid_size))
         self.picked_locations = set()
+        self.picked_junctions = set()
         self.rsu_counter = 0
         self.run()
 
@@ -65,12 +66,28 @@ class PMCB_P:
         # Find the location with the highest projected flow
         next_location = np.unravel_index(np.argmax(self.location_flows, axis=None), self.location_flows.shape)
 
+        # Get the junction closest to the center of the grid cell
+        center_x = (next_location[0] + 0.5) * (self.sumoparser.x_max / self.grid_size)
+        center_y = (next_location[1] + 0.5) * (self.sumoparser.y_max / self.grid_size)
+        closest_junction = self.find_closest_junction(center_x, center_y)
+
         # Add the best location to picked_locations and remove from all_locations
+        self.picked_junctions.add(closest_junction)
         self.picked_locations.add(next_location)
         self.remaining_locations.remove(next_location)
         # generate new M-Matrix with removed handled vehicles
         self.update_M(next_location)
         print(f"Picked location {next_location} with projected flow {self.location_flows[next_location]}")
+
+    def find_closest_junction(self, center_x, center_y):
+        closest_junction = None
+        min_distance = float("inf")
+        for junction in self.sumoparser.junctions:
+            distance = np.sqrt((center_x - junction["x"]) ** 2 + (center_y - junction["y"]) ** 2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_junction = (junction["x"], junction["y"])
+        return closest_junction
 
     def update_M(self, picked_location):
         location_vehicle = self.sumoparser.location_vehicles[picked_location]
