@@ -1,9 +1,13 @@
+import numpy as np
+
+
 class DensityBased:
     def __init__(self, sumoparser, max_rsus):
         self.max_rsus = max_rsus
+        self.sumoparser = sumoparser
         self.grid_size = sumoparser.grid_size
         self.M = sumoparser.M
-        self.picked_locations = set()
+        self.picked_junctions = set()
         self.run()
 
     def run(self):
@@ -18,4 +22,19 @@ class DensityBased:
         # Pick the top locations based on vehicle density
         for i in range(min(self.max_rsus, len(density_list))):
             x, y, _ = density_list[i]
-            self.picked_locations.add((x, y))
+            # Get the junction closest to the center of the grid cell
+            center_x = (x + 0.5) * (self.sumoparser.x_max / self.grid_size)
+            center_y = (y + 0.5) * (self.sumoparser.y_max / self.grid_size)
+            closest_junction = self.find_closest_junction(center_x, center_y)
+
+            self.picked_junctions.add(closest_junction)
+
+    def find_closest_junction(self, center_x, center_y):
+        closest_junction = None
+        min_distance = float("inf")
+        for junction in self.sumoparser.junctions:
+            distance = np.sqrt((center_x - junction["x"]) ** 2 + (center_y - junction["y"]) ** 2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_junction = (junction["x"], junction["y"])
+        return closest_junction
