@@ -110,6 +110,7 @@ class SUMOParser:
                             "type": junction.get("type"),
                         }
                     )
+            self.junctions.sort(key=lambda j: (j["x"], j["y"]))
         except Exception as e:
             print(f"An error occurred while parsing junctions: {e}")
 
