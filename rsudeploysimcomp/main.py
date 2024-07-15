@@ -1,3 +1,4 @@
+from rsudeploysimcomp.garsud.garsud import GARSUD
 from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
 from rsudeploysimcomp.sumo_interface.sumo_parser import SUMOParser
@@ -21,8 +22,12 @@ def main():
     rsu_deployment.export_picked_locations_to_csv("picked_locations_all.csv", parser.junctions)
     rsu_deployment.export_picked_locations_to_csv("picked_locations_density.csv", density_based.picked_junctions)
 
-    # for junction in parser.junctions:
-    # print(f"Junction {junction['id']} at ({junction['x']}, {junction['y']}) of type {junction['type']}")
+    garsud = GARSUD(sumoparser=parser, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10)
+
+    garsud.setup_ga()
+    garsud.run()
+
+    rsu_deployment.export_picked_locations_to_csv("picked_locations_garsud.csv", garsud.picked_junctions)
 
 
 if __name__ == "__main__":
