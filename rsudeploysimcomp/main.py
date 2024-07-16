@@ -2,7 +2,7 @@ from rsudeploysimcomp.garsud.garsud import GARSUD
 from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
 from rsudeploysimcomp.sumo_interface.sumo_parser import SUMOParser
-from rsudeploysimcomp.utils.config_loader import load_config
+from rsudeploysimcomp.utils.utils import load_config
 from rsudeploysimcomp.vehicle_density_based.densitybased import DensityBased
 
 

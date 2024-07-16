@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from scipy.sparse import lil_matrix
 
-from rsudeploysimcomp.utils.config_loader import load_config
+from rsudeploysimcomp.utils.utils import load_config
 
 config_test = load_config("test")
 config_sim = load_config("sim")
