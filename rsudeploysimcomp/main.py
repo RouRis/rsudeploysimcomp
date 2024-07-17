@@ -19,7 +19,10 @@ def main():
     rsu_deployment = RSU_SIM_Interface()
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations_pmcp.csv", pmcp.picked_junctions)
-    rsu_deployment.export_picked_locations_to_csv("picked_locations_all.csv", parser.junctions)
+
+    data = [(junction['x'], junction['y']) for junction in parser.junctions]
+
+    rsu_deployment.export_picked_locations_to_csv("picked_locations_all.csv", data)
     rsu_deployment.export_picked_locations_to_csv("picked_locations_density.csv", density_based.picked_junctions)
 
     garsud = GARSUD(sumoparser=parser, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10)
@@ -28,6 +31,7 @@ def main():
     garsud.run()
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations_garsud.csv", garsud.picked_junctions)
+    rsu_deployment.convert_csv_to_parquet("picked_locations_garsud.csv", "picked_locations_garsud.parquet")
 
 
 if __name__ == "__main__":
