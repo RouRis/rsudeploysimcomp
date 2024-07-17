@@ -20,7 +20,7 @@ def main():
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations_pmcp.csv", pmcp.picked_junctions)
 
-    data = [(junction['x'], junction['y']) for junction in parser.junctions]
+    data = [(junction["x"], junction["y"]) for junction in parser.junctions]
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations_all.csv", data)
     rsu_deployment.export_picked_locations_to_csv("picked_locations_density.csv", density_based.picked_junctions)

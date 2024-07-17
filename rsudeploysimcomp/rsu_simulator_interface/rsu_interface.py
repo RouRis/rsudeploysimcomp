@@ -6,12 +6,14 @@ class RSU_SIM_Interface:
         data = list(junctions)
         agent_ids = [200000 + i for i in range(len(junctions))]
         time_steps = [0] * len(junctions)
-        df = pd.DataFrame({
-            "time_step": time_steps,
-            "agent_id": agent_ids,
-            "x": [coord[0] for coord in data],
-            "y": [coord[1] for coord in data]
-        })
+        df = pd.DataFrame(
+            {
+                "time_step": time_steps,
+                "agent_id": agent_ids,
+                "x": [coord[0] for coord in data],
+                "y": [coord[1] for coord in data],
+            }
+        )
         df.to_csv(file_path, index=False)
 
     def convert_csv_to_parquet(self, csv_file_path, parquet_file_path):
