@@ -1,3 +1,4 @@
+from rsudeploysimcomp.all_junctions.all_junctions import AllJunctions
 from rsudeploysimcomp.garsud.garsud import GARSUD
 from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
@@ -15,14 +16,13 @@ def main():
 
     parser = SUMOParser(grid_size=grid_size)
     pmcp = PMCB_P(parser, num_rsus)
+    all_junctions = AllJunctions(parser)
     density_based = DensityBased(parser, num_rsus)
+
     rsu_deployment = RSU_SIM_Interface()
 
     rsu_deployment.export_picked_locations_to_csv("picked_locations_pmcp.csv", pmcp.picked_junctions)
-
-    data = [(junction["x"], junction["y"]) for junction in parser.junctions]
-
-    rsu_deployment.export_picked_locations_to_csv("picked_locations_all.csv", data)
+    rsu_deployment.export_picked_locations_to_csv("picked_locations_all.csv", all_junctions.data)
     rsu_deployment.export_picked_locations_to_csv("picked_locations_density.csv", density_based.picked_junctions)
 
     garsud = GARSUD(sumoparser=parser, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10)

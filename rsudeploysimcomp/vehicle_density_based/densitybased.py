@@ -1,4 +1,4 @@
-import numpy as np
+from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
 
 
 class DensityBased:
@@ -25,16 +25,6 @@ class DensityBased:
             # Get the junction closest to the center of the grid cell
             center_x = (x + 0.5) * (self.sumoparser.x_max / self.grid_size)
             center_y = (y + 0.5) * (self.sumoparser.y_max / self.grid_size)
-            closest_junction = self.find_closest_junction(center_x, center_y)
-
-            self.picked_junctions.add(closest_junction)
-
-    def find_closest_junction(self, center_x, center_y):
-        closest_junction = None
-        min_distance = float("inf")
-        for junction in self.sumoparser.junctions:
-            distance = np.sqrt((center_x - junction["x"]) ** 2 + (center_y - junction["y"]) ** 2)
-            if distance < min_distance:
-                min_distance = distance
-                closest_junction = (junction["x"], junction["y"])
-        return closest_junction
+            rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
+            adjusted_center_x, adjusted_center_y = adjust_coordinates_with_offsets(self.sumoparser, rsu_location)
+            self.picked_junctions.add((adjusted_center_x, adjusted_center_y))

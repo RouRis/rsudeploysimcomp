@@ -61,6 +61,17 @@ def parse_max_xy():
         return x_max, y_max
 
 
+def parse_net_offset():
+    net_offset = find_element_attribute_in_xml_gz(path_to_net_xml_gx, "location", "netOffset")
+    if net_offset is None:
+        return -1, -1
+    else:
+        net_offset_values = [float(x) for x in net_offset.split(",")]
+        x_offset = net_offset_values[0]
+        y_offset = net_offset_values[1]
+        return x_offset, y_offset
+
+
 class SUMOParser:
     def __init__(self, grid_size):
         self.grid_size = grid_size  # Number of cells per dimension
@@ -69,6 +80,7 @@ class SUMOParser:
             (self.grid_size * self.grid_size, self.grid_size * self.grid_size), dtype=float
         )  # Sparse migration matrix
         self.x_max, self.y_max = parse_max_xy()
+        self.x_offset, self.y_offset = parse_net_offset()
         self.x_min, self.y_min = 0, 0
         self.vehicle_paths = {}
         self.location_vehicles = {}

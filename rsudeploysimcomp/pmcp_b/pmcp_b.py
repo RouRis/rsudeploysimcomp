@@ -1,6 +1,6 @@
 import numpy as np
 
-from rsudeploysimcomp.utils.utils import find_closest_junction
+from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
 
 
 class PMCB_P:
@@ -71,10 +71,12 @@ class PMCB_P:
         # Get the junction closest to the center of the grid cell
         center_x = (next_location[0] + 0.5) * (self.sumoparser.x_max / self.grid_size)
         center_y = (next_location[1] + 0.5) * (self.sumoparser.y_max / self.grid_size)
-        closest_junction = find_closest_junction(self.sumoparser, center_x, center_y)
+        rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
+
+        adjusted_center_x, adjusted_center_y = adjust_coordinates_with_offsets(self.sumoparser, rsu_location)
 
         # Add the best location to picked_locations and remove from all_locations
-        self.picked_junctions.add(closest_junction)
+        self.picked_junctions.add((adjusted_center_x, adjusted_center_y))
         self.picked_locations.add(next_location)
         self.remaining_locations.remove(next_location)
         # generate new M-Matrix with removed handled vehicles

@@ -2,7 +2,7 @@ import random
 
 import pygad
 
-from rsudeploysimcomp.utils.utils import find_closest_junction
+from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
 
 
 class GARSUD:
@@ -63,8 +63,9 @@ class GARSUD:
             y = int(index // self.grid_size)
             center_x = (x + 0.5) * (self.sumoparser.x_max / self.grid_size)
             center_y = (y + 0.5) * (self.sumoparser.y_max / self.grid_size)
-            closest_junction = find_closest_junction(self.sumoparser, center_x, center_y)
-            junctions.append(closest_junction)
+            rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
+            adjusted_center_x, adjusted_center_y = adjust_coordinates_with_offsets(self.sumoparser, rsu_location)
+            junctions.append((adjusted_center_x, adjusted_center_y))
         self.picked_junctions = junctions
 
     def get_best_solution(self):

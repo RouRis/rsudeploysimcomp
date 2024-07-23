@@ -21,3 +21,11 @@ def find_closest_junction(sumoparser, center_x, center_y):
             min_distance = distance
             closest_junction = (junction["x"], junction["y"])
     return closest_junction
+
+
+def adjust_coordinates_with_offsets(sumoparser, location):
+    # Adjust the coordinates with the offsets
+    adjusted_center_x = location[0] - sumoparser.x_offset
+    adjusted_center_y = location[1] - sumoparser.y_offset
+
+    return adjusted_center_x, adjusted_center_y
