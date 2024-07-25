@@ -6,16 +6,14 @@ from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_c
 
 
 class GARSUD:
-    def __init__(
-        self, sumoparser, grid_size=9, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10
-    ):
+    def __init__(self, sumoparser, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10):
         self.num_generations = num_generations
         self.num_parents_mating = num_parents_mating
         self.sol_per_pop = sol_per_pop
         self.num_rsus = num_rsus
         self.ga_instance = None
-        self.grid_size = grid_size
-        self.number_locations = grid_size * grid_size
+        self.grid_size = sumoparser.grid_size
+        self.number_locations = self.grid_size * self.grid_size
         self.mutation_probability = 1.0 / num_rsus
         self.keep_parents = int(sol_per_pop / 2)
         self.initial_population = self._generate_initial_population()
@@ -46,7 +44,7 @@ class GARSUD:
             crossover_type="single_point",
             mutation_type="random",
             mutation_probability=self.mutation_probability,
-            gene_space=range(1, self.number_locations + 1),
+            gene_space=range(0, self.number_locations),
         )
 
     def run(self):
