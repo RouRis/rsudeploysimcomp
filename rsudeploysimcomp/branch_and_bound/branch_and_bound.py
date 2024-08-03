@@ -1,5 +1,6 @@
 import numpy as np
 
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
 from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
 
 
@@ -12,12 +13,14 @@ class BranchAndBound:
         self.optimal_value = -1
         self.optimal_solution = None
         self.picked_junctions = []
+        self.rsu_sim_interface = RSU_SIM_Interface()
         self.branch_and_bound()
 
     # Placeholder for the actual objective function
     def objective_function(self, x):
         # Example: minimize the negative sum (simulating coverage maximization)
-        return -sum(x)
+        coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
+        return coverage * 100 / avg_distance
 
     # Placeholder for checking if a solution is feasible
     def is_feasible(self, x):

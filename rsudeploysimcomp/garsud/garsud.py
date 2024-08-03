@@ -2,6 +2,7 @@ import random
 
 import pygad
 
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
 from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
 
 
@@ -19,6 +20,7 @@ class GARSUD:
         self.initial_population = self._generate_initial_population()
         self.sumoparser = sumoparser
         self.picked_junctions = []
+        self.rsu_sim_interface = RSU_SIM_Interface()
 
     def _generate_initial_population(self):
         # Generate random initial population (deployments)
@@ -28,7 +30,8 @@ class GARSUD:
         ]
 
     def fitness_func(self, ga_instance, solution, solution_idx):
-        return sum(solution)
+        coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
+        return coverage, -avg_distance
 
     def setup_ga(self):
         # Create an instance of the pygad.GA class with the parameters defined above

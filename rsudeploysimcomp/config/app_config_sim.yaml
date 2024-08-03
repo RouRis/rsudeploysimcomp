@@ -1,9 +1,15 @@
 general:
+  rsu_radius: 1000
 sumo_interface:
   xml_parser:
     path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml
     path_to_net_xml_zip: ./data/net_files/Test/osm.net.xml.gz
     grid_size: 9
 garsud:
+  num_generations: 10
+  num_parents_mating: 5
+  sol_per_pop: 20
+  num_rsus: 10
+  mutation_percent_genes: 10
 pmcp_b:
-    max_rsus: 5
+  num_rsus: 5

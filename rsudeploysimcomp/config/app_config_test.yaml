@@ -1,4 +1,5 @@
 general:
+  rsu_radius: 1000
 sumo_interface:
   xml_parser:
     path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml
