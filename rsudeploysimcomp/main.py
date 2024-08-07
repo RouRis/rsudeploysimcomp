@@ -49,6 +49,8 @@ def main():
 
     coverage, avg_distance = rsu_sim_interface.parse_output_file(tx_data_parquet_path, rsu_radius)
 
+    print(coverage)
+    print(avg_distance)
 
 if __name__ == "__main__":
     main()
