@@ -1,5 +1,5 @@
 import random
-import os
+
 import pygad
 
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
@@ -36,8 +36,9 @@ class GARSUD:
         # generate junctions out of current solution
         junctions = self.grid_index_to_junction_coordinates(solution)
         # generate Deployment Input Files
-        self.rsu_sim_interface.generate_deployment_file(junctions, self.deployment_csv_name,
-                                                        self.deployment_parquet_name)
+        self.rsu_sim_interface.generate_deployment_file(
+            junctions, self.deployment_csv_name, self.deployment_parquet_name
+        )
         self.rsu_sim_interface.trigger_rsu_simulotor()
         coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
         return coverage, -avg_distance

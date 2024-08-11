@@ -21,4 +21,3 @@ pmcp_b:
 branch_and_bound:
   deployment_csv: rsu_deployment_b&b.csv
   deployment_parquet: rsu_deployment_b&b.parquet
-

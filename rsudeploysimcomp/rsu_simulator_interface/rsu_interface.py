@@ -61,4 +61,4 @@ class RSU_SIM_Interface:
         self.convert_csv_to_parquet(csv_path, parquet_path)
 
     def trigger_rsu_simulotor(self):
-
+        pass

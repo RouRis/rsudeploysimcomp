@@ -51,5 +51,6 @@ def main():
     print(coverage)
     print(avg_distance)
 
+
 if __name__ == "__main__":
     main()
