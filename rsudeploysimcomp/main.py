@@ -11,11 +11,10 @@ from rsudeploysimcomp.vehicle_density_based.densitybased import DensityBased
 
 
 def main():
-    config = load_config("test")
-    # config = load_config("sim")
+    config = load_config()
 
-    grid_size = int(config["sumo_interface"]["xml_parser"]["grid_size"])  # Set grid size here
-    num_rsus = config["pmcp_b"]["num_rsus"]  # Set maximum number of RSUs here
+    grid_size = int(config["general"]["grid_size"])  # Set grid size here
+    num_rsus = config["general"]["num_rsus"]  # Set maximum number of RSUs here
     rsu_radius = config["general"]["rsu_radius"]
     parser = SUMOParser(grid_size=grid_size)
     # PMCP-B

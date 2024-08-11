@@ -6,10 +6,9 @@ from scipy.sparse import lil_matrix
 
 from rsudeploysimcomp.utils.utils import load_config
 
-config_test = load_config("test")
-config_sim = load_config("sim")
-path_to_fcd_xml = config_test["sumo_interface"]["xml_parser"]["path_to_fcd_xml"]
-path_to_net_xml_gx = config_test["sumo_interface"]["xml_parser"]["path_to_net_xml_zip"]
+config = load_config()
+path_to_fcd_xml = config["sumo_interface"]["xml_parser"]["path_to_fcd_xml"]
+path_to_net_xml_gx = config["sumo_interface"]["xml_parser"]["path_to_net_xml_zip"]
 
 
 def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):

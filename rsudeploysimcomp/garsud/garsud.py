@@ -1,9 +1,9 @@
 import random
-
+import os
 import pygad
 
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
-from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
+from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction, load_config
 
 
 class GARSUD:
@@ -21,6 +21,9 @@ class GARSUD:
         self.sumoparser = sumoparser
         self.picked_junctions = []
         self.rsu_sim_interface = RSU_SIM_Interface()
+        self.config = load_config()
+        self.deployment_csv_name = self.config["garsud"]["deployment_csv"]
+        self.deployment_parquet_name = self.config["garsud"]["deployment_parquet"]
 
     def _generate_initial_population(self):
         # Generate random initial population (deployments)
@@ -30,6 +33,12 @@ class GARSUD:
         ]
 
     def fitness_func(self, ga_instance, solution, solution_idx):
+        # generate junctions out of current solution
+        junctions = self.grid_index_to_junction_coordinates(solution)
+        # generate Deployment Input Files
+        self.rsu_sim_interface.generate_deployment_file(junctions, self.deployment_csv_name,
+                                                        self.deployment_parquet_name)
+        self.rsu_sim_interface.trigger_rsu_simulotor()
         coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
         return coverage, -avg_distance
 
@@ -55,7 +64,7 @@ class GARSUD:
         self.ga_instance.run()
         # Convert Genotype (Indices of grids) to Phenotype (x,y of actual junctions)
         solution, _, _ = self.ga_instance.best_solution()
-        self.grid_index_to_junction_coordinates(solution)
+        self.picked_junctions = self.grid_index_to_junction_coordinates(solution)
 
     def grid_index_to_junction_coordinates(self, solution):
         junctions = []
@@ -67,7 +76,7 @@ class GARSUD:
             rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
             adjusted_center_x, adjusted_center_y = adjust_coordinates_with_offsets(self.sumoparser, rsu_location)
             junctions.append((adjusted_center_x, adjusted_center_y))
-        self.picked_junctions = junctions
+        return junctions
 
     def get_best_solution(self):
         # Get the best solution found and its fitness

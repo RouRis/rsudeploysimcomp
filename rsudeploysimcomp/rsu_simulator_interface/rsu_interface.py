@@ -49,10 +49,16 @@ class RSU_SIM_Interface:
         # Calculate the coverage percentage
         coverage_percentage = (covered_car_records / total_car_records) * 100 if total_car_records > 0 else 0
 
-        # print(len(df))
-        # print(len(relevant_data))
-        # print(len(covered))
-
         average_distance = relevant_data["distance"].mean() if total_car_records > 0 else float("nan")
 
         return coverage_percentage, average_distance
+
+    def generate_deployment_file(self, junctions, csv_path, parquet_path):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(current_dir, "Deployment", csv_path)
+        parquet_path = os.path.join(current_dir, "Deployment", parquet_path)
+        self.export_picked_locations_to_csv(csv_path, junctions)
+        self.convert_csv_to_parquet(csv_path, parquet_path)
+
+    def trigger_rsu_simulotor(self):
+
