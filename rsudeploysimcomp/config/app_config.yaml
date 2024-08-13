@@ -2,6 +2,17 @@ general:
   rsu_radius: 1000
   num_rsus: 10
   grid_size: 9
+  base_path: /Users/rouvenrischert
+
+rsu_interface:
+  scenario: /koln
+  prep_disolv_path: /Projects/Python/prep-disolv
+  disolv_path: /Projects/Rust/disolv
+  configs_path: /Workspace/configs
+  output_path: /Workspace/output
+  input_path: /Workspace/input
+  deployment_csv_path: /positions/rsu_deployment.csv
+  deployment_parquet_path: /positions/rsu_deployment.parquet
 
 sumo_interface:
   xml_parser:
@@ -9,10 +20,8 @@ sumo_interface:
     path_to_net_xml_zip: ./data/net_files/Test/osm.net.xml.gz
 
 garsud:
-  deployment_csv: rsu_deployment_garsud.csv
-  deployment_parquet: rsu_deployment_garsud.parquet
   num_generations: 10
-  num_parents_mating: 5
+  num_parents_mating: 10
   sol_per_pop: 20
   mutation_percent_genes: 10
 

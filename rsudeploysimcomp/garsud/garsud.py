@@ -7,23 +7,34 @@ from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_c
 
 
 class GARSUD:
-    def __init__(self, sumoparser, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10):
-        self.num_generations = num_generations
-        self.num_parents_mating = num_parents_mating
-        self.sol_per_pop = sol_per_pop
-        self.num_rsus = num_rsus
-        self.ga_instance = None
-        self.grid_size = sumoparser.grid_size
-        self.number_locations = self.grid_size * self.grid_size
-        self.mutation_probability = 1.0 / num_rsus
-        self.keep_parents = int(sol_per_pop / 2)
-        self.initial_population = self._generate_initial_population()
-        self.sumoparser = sumoparser
-        self.picked_junctions = []
-        self.rsu_sim_interface = RSU_SIM_Interface()
+    def __init__(self, sumoparser):
         self.config = load_config()
-        self.deployment_csv_name = self.config["garsud"]["deployment_csv"]
-        self.deployment_parquet_name = self.config["garsud"]["deployment_parquet"]
+        self.ga_instance = None
+        self.picked_junctions = []
+        self.sumoparser = sumoparser
+        self.rsu_sim_interface = RSU_SIM_Interface()
+
+        self.num_generations = self.config["garsud"]["num_generations"]
+        self.num_parents_mating = self.config["garsud"]["num_parents_mating"]
+        self.sol_per_pop = self.config["garsud"]["sol_per_pop"]
+        self.num_rsus = self.config["general"]["num_rsus"]
+        self.grid_size = self.config["general"]["grid_size"]
+        self.number_locations = self.grid_size * self.grid_size
+        self.mutation_probability = 1.0 / self.num_rsus
+        self.keep_parents = int(self.sol_per_pop / 2)
+
+        self.initial_population = self._generate_initial_population()
+
+        self.base_path = self.config["general"]["base_path"]
+        self.deployment_csv_path = (self.config["general"]["base_path"]
+                                    + self.config["rsu_interface"]["input_path"]
+                                    + self.config["rsu_interface"]["scenario"]
+                                    + self.config["rsu_interface"]["deployment_csv_path"])
+
+        self.deployment_parquet_path = (self.config["general"]["base_path"]
+                                        + self.config["rsu_interface"]["input_path"]
+                                        + self.config["rsu_interface"]["scenario"]
+                                        + self.config["rsu_interface"]["deployment_parquet_path"])
 
     def _generate_initial_population(self):
         # Generate random initial population (deployments)
@@ -37,10 +48,11 @@ class GARSUD:
         junctions = self.grid_index_to_junction_coordinates(solution)
         # generate Deployment Input Files
         self.rsu_sim_interface.generate_deployment_file(
-            junctions, self.deployment_csv_name, self.deployment_parquet_name
+            junctions, self.deployment_csv_path, self.deployment_parquet_path
         )
-        self.rsu_sim_interface.trigger_rsu_simulotor()
+        self.rsu_sim_interface.trigger_rsu_simulator()
         coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
+        print(coverage, avg_distance)
         return coverage, -avg_distance
 
     def setup_ga(self):

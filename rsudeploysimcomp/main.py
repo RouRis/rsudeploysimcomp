@@ -24,7 +24,7 @@ def main():
     # Density_based
     density_based = DensityBased(parser, num_rsus)
     # Garsud
-    garsud = GARSUD(sumoparser=parser, num_generations=100, num_parents_mating=10, sol_per_pop=20, num_rsus=10)
+    garsud = GARSUD(sumoparser=parser)
     garsud.setup_ga()
     garsud.run()
     # Branch and Bound
