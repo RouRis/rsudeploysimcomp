@@ -1,6 +1,8 @@
 import os
 
+import matplotlib.pyplot as plt  # Importing Matplotlib for plotting
 import numpy as np
+import pandas as pd
 import yaml
 
 
@@ -23,9 +25,45 @@ def find_closest_junction(sumoparser, center_x, center_y):
     return closest_junction
 
 
-def adjust_coordinates_with_offsets(sumoparser, location):
-    # Adjust the coordinates with the offsets
+def adjust_coordinates_by_offsets(sumoparser, location):
+    # Adjust the coordinates by offsets
     adjusted_center_x = location[0] - sumoparser.x_offset
     adjusted_center_y = location[1] - sumoparser.y_offset
 
     return adjusted_center_x, adjusted_center_y
+
+
+def plot_deployment(picked_junctions, title):
+    config = load_config()
+
+    fcd_path = (
+        config["general"]["base_path"]
+        + config["rsu_interface"]["input_path"]
+        + config["rsu_interface"]["scenario"]
+        + config["rsu_interface"]["fcd_parquet"]
+    )
+
+    # Plot Junctions
+    junctions_x = [coord[0] for coord in picked_junctions]
+    junctions_y = [coord[1] for coord in picked_junctions]
+
+    df = pd.read_parquet(fcd_path)
+    plt.figure(figsize=(10, 8))
+    plt.plot(
+        df["x"],
+        df["y"],
+        linestyle="-",
+        color="gray",
+        marker="o",
+        markersize=1,
+        linewidth=0.001,
+        label="Street Network",
+    )
+    plt.scatter(junctions_x, junctions_y, color="blue", s=50, marker="*", label="RSU Locations")
+    plt.legend()
+    plt.xlabel("X Coordinates")
+    plt.ylabel("Y Coordinates")
+    plt.title(title)
+    plt.grid(True)
+
+    plt.show()

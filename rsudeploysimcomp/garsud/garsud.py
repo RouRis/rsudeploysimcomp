@@ -2,8 +2,13 @@ import random
 
 import pygad
 
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
-from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction, load_config
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
+from rsudeploysimcomp.utils.utils import (
+    adjust_coordinates_by_offsets,
+    find_closest_junction,
+    load_config,
+    plot_deployment,
+)
 
 
 class GARSUD:
@@ -26,15 +31,19 @@ class GARSUD:
         self.initial_population = self._generate_initial_population()
 
         self.base_path = self.config["general"]["base_path"]
-        self.deployment_csv_path = (self.config["general"]["base_path"]
-                                    + self.config["rsu_interface"]["input_path"]
-                                    + self.config["rsu_interface"]["scenario"]
-                                    + self.config["rsu_interface"]["deployment_csv_path"])
+        self.deployment_csv_path = (
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
+        )
 
-        self.deployment_parquet_path = (self.config["general"]["base_path"]
-                                        + self.config["rsu_interface"]["input_path"]
-                                        + self.config["rsu_interface"]["scenario"]
-                                        + self.config["rsu_interface"]["deployment_parquet_path"])
+        self.deployment_parquet_path = (
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
+        )
 
     def _generate_initial_population(self):
         # Generate random initial population (deployments)
@@ -47,15 +56,26 @@ class GARSUD:
         # generate junctions out of current solution
         junctions = self.grid_index_to_junction_coordinates(solution)
         # generate Deployment Input Files
-        self.rsu_sim_interface.generate_deployment_file(
-            junctions, self.deployment_csv_path, self.deployment_parquet_path
-        )
+        generate_deployment_file(junctions, self.deployment_csv_path, self.deployment_parquet_path)
         self.rsu_sim_interface.trigger_rsu_simulator()
         coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
-        print(coverage, avg_distance)
+        # print(str(solution_idx+1)
+        #      + "/"
+        #      + str(self.sol_per_pop)
+        #      + " of Generation "
+        #     + str(ga_instance.generations_completed + 1))
         return coverage, -avg_distance
 
     def setup_ga(self):
+        # Define the callback function to provide feedback after each generation
+        def on_generation(ga_instance):
+            solution, solution_fitness, _ = ga_instance.best_solution()
+            print(f"Generation {ga_instance.generations_completed}:")
+            print(f"    Best solution so far: {solution}")
+            print(f"    Fitness of the best solution so far: {solution_fitness}")
+            self.picked_junctions = self.grid_index_to_junction_coordinates(solution)
+            plot_deployment(self.picked_junctions, "Garsud: Generation " + str(ga_instance.generations_completed))
+
         # Create an instance of the pygad.GA class with the parameters defined above
         self.ga_instance = pygad.GA(
             num_generations=self.num_generations,
@@ -70,6 +90,7 @@ class GARSUD:
             mutation_type="random",
             mutation_probability=self.mutation_probability,
             gene_space=range(0, self.number_locations),
+            on_generation=on_generation,
         )
 
     def run(self):
@@ -87,7 +108,7 @@ class GARSUD:
             center_x = (x + 0.5) * (self.sumoparser.x_max / self.grid_size)
             center_y = (y + 0.5) * (self.sumoparser.y_max / self.grid_size)
             rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
-            adjusted_center_x, adjusted_center_y = adjust_coordinates_with_offsets(self.sumoparser, rsu_location)
+            adjusted_center_x, adjusted_center_y = adjust_coordinates_by_offsets(self.sumoparser, rsu_location)
             junctions.append((adjusted_center_x, adjusted_center_y))
         return junctions
 

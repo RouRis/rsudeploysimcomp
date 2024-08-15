@@ -1,6 +1,6 @@
 import numpy as np
 
-from rsudeploysimcomp.utils.utils import adjust_coordinates_with_offsets, find_closest_junction
+from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction
 
 
 class PMCB_P:
@@ -73,7 +73,7 @@ class PMCB_P:
         center_y = (next_location[1] + 0.5) * (self.sumoparser.y_max / self.grid_size)
         rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
 
-        adjusted_center_x, adjusted_center_y = adjust_coordinates_with_offsets(self.sumoparser, rsu_location)
+        adjusted_center_x, adjusted_center_y = adjust_coordinates_by_offsets(self.sumoparser, rsu_location)
 
         # Add the best location to picked_locations and remove from all_locations
         self.picked_junctions.add((adjusted_center_x, adjusted_center_y))
@@ -81,7 +81,7 @@ class PMCB_P:
         self.remaining_locations.remove(next_location)
         # generate new M-Matrix with removed handled vehicles
         self.update_M(next_location)
-        print(f"Picked location {next_location} with projected flow {self.location_flows[next_location]}")
+        # print(f"Picked location {next_location} with projected flow {self.location_flows[next_location]}")
 
     def update_M(self, picked_location):
         location_vehicle = self.sumoparser.location_vehicles[picked_location]

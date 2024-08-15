@@ -1,7 +1,7 @@
 general:
   rsu_radius: 1000
   num_rsus: 10
-  grid_size: 9
+  grid_size: 20
   base_path: /Users/rouvenrischert
 
 rsu_interface:
@@ -13,6 +13,7 @@ rsu_interface:
   input_path: /Workspace/input
   deployment_csv_path: /positions/rsu_deployment.csv
   deployment_parquet_path: /positions/rsu_deployment.parquet
+  fcd_parquet: /positions/koln_fcd.parquet
 
 sumo_interface:
   xml_parser:
@@ -22,7 +23,7 @@ sumo_interface:
 garsud:
   num_generations: 10
   num_parents_mating: 10
-  sol_per_pop: 20
+  sol_per_pop: 10
   mutation_percent_genes: 10
 
 pmcp_b:
