@@ -28,7 +28,7 @@ def convert_csv_to_parquet(csv_file_path, parquet_file_path):
     df.to_parquet(parquet_file_path, index=False)
 
 
-def parse_output_file(parquet_file_path, reach_distance=1000):
+def parse_output_file(parquet_file_path, rsu_radius=1000):
     # Read the Parquet file into a DataFrame
     df = pd.read_parquet(parquet_file_path)
 
@@ -36,7 +36,7 @@ def parse_output_file(parquet_file_path, reach_distance=1000):
     relevant_data = relevant_data[relevant_data["selected_agent"] >= 200000]
 
     # Filter rows where the distance is within the reach of the RSU
-    covered = relevant_data[relevant_data["distance"] <= reach_distance]
+    covered = relevant_data[relevant_data["distance"] <= rsu_radius]
 
     # Total number of car records (agent_id > 0)
     total_car_records = len(relevant_data)
@@ -97,6 +97,7 @@ def run_rsu_simulator(disolv_path, configs_path):
 class RSU_SIM_Interface:
     def __init__(self):
         self.config = load_config()
+        self.rsu_radius = self.config["general"]["rsu_radius"]
 
     def get_metrics_from_simulator(self):
         tx_data_parquet_path = (
@@ -106,7 +107,7 @@ class RSU_SIM_Interface:
             + "/tx_data.parquet"
         )
 
-        return parse_output_file(tx_data_parquet_path)
+        return parse_output_file(tx_data_parquet_path, rsu_radius=self.rsu_radius)
 
     def trigger_rsu_simulator(self):
         base_path = self.config["general"]["base_path"]

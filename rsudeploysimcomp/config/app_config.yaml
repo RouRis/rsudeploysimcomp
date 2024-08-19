@@ -1,8 +1,10 @@
 general:
   rsu_radius: 1000
-  num_rsus: 10
-  grid_size: 20
+  num_rsus: 5
+  grid_size: 32
   base_path: /Users/rouvenrischert
+  rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
+  plot_path: /rsudeploysimcomp/Plots
 
 rsu_interface:
   scenario: /koln
@@ -21,7 +23,7 @@ sumo_interface:
     path_to_net_xml_zip: ./data/net_files/Test/osm.net.xml.gz
 
 garsud:
-  num_generations: 10
+  num_generations: 20
   num_parents_mating: 10
   sol_per_pop: 10
   mutation_percent_genes: 10

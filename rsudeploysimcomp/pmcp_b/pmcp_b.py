@@ -1,27 +1,46 @@
 import numpy as np
 
-from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction
-
+from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import generate_deployment_file, RSU_SIM_Interface
 
 class PMCB_P:
-    def __init__(self, sumoparser, num_rsus):
+    def __init__(self, sumoparser):
+        self.config = load_config()
+        self.rsu_sim_interface = RSU_SIM_Interface()
+        self.coverage = -1
+        self.avg_distance = -1
         self.sumoparser = sumoparser
         self.grid_size = sumoparser.grid_size  # Number of cells per dimension
         self.M = sumoparser.M  # 2D array with vehicle counts
         self.P = sumoparser.P  # 2D array (sparsed) with migration ratios between locations
-        self.num_rsus = num_rsus  # Maximum number of RSUs to be deployed
+        self.num_rsus = self.config["general"]["num_rsus"]  # Maximum number of RSUs to be deployed
         self.location_flows = np.zeros((self.grid_size, self.grid_size))
         self.remaining_locations = set((x, y) for x in range(self.grid_size) for y in range(self.grid_size))
         self.picked_locations = set()
         self.picked_junctions = set()
         self.rsu_counter = 0
-        self.run()
+        self.deployment_csv_path = (
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_csv_path"]
+        )
+
+        self.deployment_parquet_path = (
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_parquet_path"]
+        )
 
     def run(self):
         while self.rsu_counter < self.num_rsus and len(self.remaining_locations) > 0:
             self.update_projected_flows()
             self.pick_next_location()
             self.rsu_counter += 1
+        generate_deployment_file(self.picked_junctions, self.deployment_csv_path, self.deployment_parquet_path)
+        self.rsu_sim_interface.trigger_rsu_simulator()
+        self.coverage, self.avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
 
     def update_projected_flows(self):
         # First iteration: Pick the location with the highest vehicle number

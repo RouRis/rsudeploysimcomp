@@ -5,53 +5,103 @@ from rsudeploysimcomp.branch_and_bound.branch_and_bound import BranchAndBound
 from rsudeploysimcomp.garsud.garsud import GARSUD
 from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import (
-    export_picked_locations_to_csv,
     parse_output_file,
 )
 from rsudeploysimcomp.sumo_interface.sumo_parser import SUMOParser
-from rsudeploysimcomp.utils.utils import load_config
+from rsudeploysimcomp.utils.utils import load_config, Plotter
 from rsudeploysimcomp.vehicle_density_based.densitybased import DensityBased
 
 
 def main():
     config = load_config()
+    print("Configuration: num_rsus={} | grid_size={} | rsu_radius={}".format(
+        config["general"]["num_rsus"],
+        config["general"]["grid_size"],
+        config["general"]["rsu_radius"]
+    ))
+    print("Starting Code: \n")
 
-    grid_size = int(config["general"]["grid_size"])  # Set grid size here
-    num_rsus = config["general"]["num_rsus"]  # Set maximum number of RSUs here
-    rsu_radius = config["general"]["rsu_radius"]
-    sumoparser = SUMOParser(grid_size=grid_size)
-    # PMCP-B
-    pmcp = PMCB_P(sumoparser, num_rsus)
+    print("SUMOParser Initialization...\n")
+    sumoparser = SUMOParser()
+
+    print("AllJunctions Initialization...\n")
+    all_junctions = AllJunctions(sumoparser=sumoparser)
+
+    print("Plotter Initialization...\n")
+    plotter = Plotter(all_junctions.picked_junctions)
+
+    print("DensityBased Initialization...\n")
+    density_based = DensityBased(sumoparser=sumoparser)
+    print("PMCB_P Initialization...\n")
+    pmcp = PMCB_P(sumoparser=sumoparser)
+    print("GARSUD Initialization...\n")
+    garsud = GARSUD(sumoparser=sumoparser, plotter=plotter)
+    print("BranchAndBound Initialization...\n")
+    branch_and_bound = BranchAndBound(sumoparser=sumoparser)
+
+    # Path to Plot-Directory:
+    plot_directory_path = (config["general"]["base_path"]
+                           + config["general"]["rsudeploysimcomp_path"]
+                           + config["general"]["plot_path"])
+
     # All junctions
-    all_junctions = AllJunctions(sumoparser)
+    all_junctions_plot_path = plot_directory_path + "/AllJunctions.png"
+    plotter.plot_deployment(rsu_positions=all_junctions.picked_junctions,
+                            title="AllJunctions",
+                            coverage=all_junctions.coverage,
+                            avg_distance=all_junctions.avg_distance,
+                            save_path=all_junctions_plot_path)
+    print("\nAllJunctions/n")
+    print("Coverage: " + str(all_junctions.coverage))
+    print("Avg-Distance: " + str(all_junctions.avg_distance))
+
+    # PMCP-B
+    print("\nRunning PMCP-B...")
+    pmcp.run()
+    pmcp_plot_path = plot_directory_path + "/PMCP_B.png"
+    plotter.plot_deployment(rsu_positions=pmcp.picked_junctions,
+                            title="PMCP-B",
+                            coverage=pmcp.coverage,
+                            avg_distance=pmcp.avg_distance,
+                            save_path=pmcp_plot_path)
+    print("Coverage: " + str(pmcp.coverage))
+    print("Avg-Distance: " + str(pmcp.avg_distance))
+
     # Density_based
-    density_based = DensityBased(sumoparser, num_rsus)
+    print("\nRunning Density-Based...")
+    density_based.run()
+    density_based_plot_path = plot_directory_path + "/DensityBased.png"
+    plotter.plot_deployment(rsu_positions=density_based.picked_junctions,
+                            title="DensityBased",
+                            coverage=density_based.coverage,
+                            avg_distance=density_based.avg_distance,
+                            save_path=density_based_plot_path)
+    print("Coverage: " + str(density_based.coverage))
+    print("Avg-Distance: " + str(density_based.avg_distance))
+
     # Garsud
-
-    # plot_deployment(density_based.picked_junctions, 'Density Based')
-    # plot_deployment(pmcp.picked_junctions, 'PMCP-B')
-
-    garsud = GARSUD(sumoparser=sumoparser)
+    print("\nRunning GARSUD...")
     garsud.setup_ga()
     garsud.run()
+    garsud_plot_path = plot_directory_path + "/GARSUD.png"
+    plotter.plot_deployment(rsu_positions=garsud.picked_junctions,
+                            title="GARSUD",
+                            coverage=garsud.coverage,
+                            avg_distance=garsud.avg_distance,
+                            save_path=garsud_plot_path)
+    print("Coverage: " + str(garsud.coverage))
+    print("Avg-Distance: " + str(garsud.avg_distance))
 
     # Branch and Bound
-    branch_and_bound = BranchAndBound(sumoparser, num_rsus)
+    print("\nRunning Branch & Bound...")
+    branch_and_bound.run()
     print(branch_and_bound.optimal_value)
     print(branch_and_bound.optimal_solution)
     print(branch_and_bound.picked_junctions)
 
-    export_picked_locations_to_csv("picked_locations_pmcp.csv", pmcp.picked_junctions)
-    export_picked_locations_to_csv("picked_locations_all.csv", all_junctions.data)
-    export_picked_locations_to_csv("picked_locations_density.csv", density_based.picked_junctions)
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    tx_data_parquet_path = os.path.join(current_dir, "Koln_v1", "disolv", "tx_data.parquet")
+    print("\nFinished")
 
-    coverage, avg_distance = parse_output_file(tx_data_parquet_path, rsu_radius)
-
-    print(coverage)
-    print(avg_distance)
 
 
 if __name__ == "__main__":

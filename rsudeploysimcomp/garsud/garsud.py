@@ -6,18 +6,19 @@ from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Inter
 from rsudeploysimcomp.utils.utils import (
     adjust_coordinates_by_offsets,
     find_closest_junction,
-    load_config,
-    plot_deployment,
-)
+    load_config)
 
 
 class GARSUD:
-    def __init__(self, sumoparser):
+    def __init__(self, sumoparser, plotter):
+        self.plotter = plotter
         self.config = load_config()
         self.ga_instance = None
         self.picked_junctions = []
         self.sumoparser = sumoparser
         self.rsu_sim_interface = RSU_SIM_Interface()
+        self.coverage = -1
+        self.avg_distance = -1
 
         self.num_generations = self.config["garsud"]["num_generations"]
         self.num_parents_mating = self.config["garsud"]["num_parents_mating"]
@@ -32,17 +33,17 @@ class GARSUD:
 
         self.base_path = self.config["general"]["base_path"]
         self.deployment_csv_path = (
-            self.config["general"]["base_path"]
-            + self.config["rsu_interface"]["input_path"]
-            + self.config["rsu_interface"]["scenario"]
-            + self.config["rsu_interface"]["deployment_csv_path"]
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-            self.config["general"]["base_path"]
-            + self.config["rsu_interface"]["input_path"]
-            + self.config["rsu_interface"]["scenario"]
-            + self.config["rsu_interface"]["deployment_parquet_path"]
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_parquet_path"]
         )
 
     def _generate_initial_population(self):
@@ -53,17 +54,7 @@ class GARSUD:
         ]
 
     def fitness_func(self, ga_instance, solution, solution_idx):
-        # generate junctions out of current solution
-        junctions = self.grid_index_to_junction_coordinates(solution)
-        # generate Deployment Input Files
-        generate_deployment_file(junctions, self.deployment_csv_path, self.deployment_parquet_path)
-        self.rsu_sim_interface.trigger_rsu_simulator()
-        coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
-        # print(str(solution_idx+1)
-        #      + "/"
-        #      + str(self.sol_per_pop)
-        #      + " of Generation "
-        #     + str(ga_instance.generations_completed + 1))
+        coverage, avg_distance = self.solution_to_metrics(solution)
         return coverage, -avg_distance
 
     def setup_ga(self):
@@ -74,7 +65,8 @@ class GARSUD:
             print(f"    Best solution so far: {solution}")
             print(f"    Fitness of the best solution so far: {solution_fitness}")
             self.picked_junctions = self.grid_index_to_junction_coordinates(solution)
-            plot_deployment(self.picked_junctions, "Garsud: Generation " + str(ga_instance.generations_completed))
+            # self.plotter.plot_deployment(self.picked_junctions, "Garsud: Generation "
+            #                              + str(ga_instance.generations_completed))
 
         # Create an instance of the pygad.GA class with the parameters defined above
         self.ga_instance = pygad.GA(
@@ -99,6 +91,7 @@ class GARSUD:
         # Convert Genotype (Indices of grids) to Phenotype (x,y of actual junctions)
         solution, _, _ = self.ga_instance.best_solution()
         self.picked_junctions = self.grid_index_to_junction_coordinates(solution)
+        self.coverage, self.avg_distance = self.solution_to_metrics(solution)
 
     def grid_index_to_junction_coordinates(self, solution):
         junctions = []
@@ -112,12 +105,10 @@ class GARSUD:
             junctions.append((adjusted_center_x, adjusted_center_y))
         return junctions
 
-    def get_best_solution(self):
-        # Get the best solution found and its fitness
-        solution, solution_fitness, solution_idx = self.ga_instance.best_solution()
-        return solution, solution_fitness
-
-    def print_best_solution(self):
-        solution, solution_fitness = self.get_best_solution()
-        print(f"Best solution: {solution}")
-        print(f"Fitness of the best solution: {solution_fitness}")
+    def solution_to_metrics(self, solution):
+        junctions = self.grid_index_to_junction_coordinates(solution)
+        # generate Deployment Input Files
+        generate_deployment_file(junctions, self.deployment_csv_path, self.deployment_parquet_path)
+        self.rsu_sim_interface.trigger_rsu_simulator()
+        coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
+        return coverage, avg_distance

@@ -1,26 +1,42 @@
 import numpy as np
 
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
-from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
+from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
 
 
 class BranchAndBound:
-    def __init__(self, sumoparser, num_rsus):
+    def __init__(self, sumoparser):
+        self.config = load_config()
+        self.deployment_csv_path = (
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_csv_path"]
+        )
+
+        self.deployment_parquet_path = (
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_parquet_path"]
+        )
+        self.num_rsus = self.config["general"]["num_rsus"]  # number of RSUs to be deployed
         self.sumoparser = sumoparser
-        self.num_rsus = num_rsus  # Maximum number of RSUs to be deployed
         self.grid_size = sumoparser.grid_size
         self.num_locations = self.grid_size * self.grid_size
         self.optimal_value = -1
         self.optimal_solution = None
         self.picked_junctions = []
         self.rsu_sim_interface = RSU_SIM_Interface()
-        self.branch_and_bound()
 
     # Placeholder for the actual objective function
-    def objective_function(self, x):
+    def objective_function(self, solution):
         # Example: minimize the negative sum (simulating coverage maximization)
+        junctions = self.to_junction_coordinates(solution)
+        generate_deployment_file(junctions, self.deployment_csv_path, self.deployment_parquet_path)
+        self.rsu_sim_interface.trigger_rsu_simulator()
         coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
-        return coverage * 100 / avg_distance
+        return coverage / avg_distance
 
     # Placeholder for checking if a solution is feasible
     def is_feasible(self, x):
@@ -33,7 +49,7 @@ class BranchAndBound:
 
     def to_junction_coordinates(self, x):
         grid_coords = self.vector_to_grid_coords(x)
-        self.grid_coord_to_junction_coordinates(grid_coords)
+        return self.grid_coord_to_junction_coordinates(grid_coords)
 
     def vector_to_grid_coords(self, vector):
         grid_coords = []
@@ -52,16 +68,18 @@ class BranchAndBound:
             rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
             adjusted_center_x, adjusted_center_y = adjust_coordinates_by_offsets(self.sumoparser, rsu_location)
             junctions.append((adjusted_center_x, adjusted_center_y))
-        self.picked_junctions = junctions
+        return junctions
 
-    def branch_and_bound(self):
+    def run(self):
         # Initial setup
         F = float("inf")  # Initialize to infinity
         best_solution = None
 
+        i = 0
         # Fathomed nodes (start with the root node representing no RSUs)
         fathomed_nodes = [np.zeros(self.num_locations)]  # Example with 5 potential RSU locations
         while fathomed_nodes:
+            i += 1
             current_node = fathomed_nodes.pop()
             # Branching (generate new nodes)
             new_nodes = []
@@ -83,6 +101,8 @@ class BranchAndBound:
                 if LB < F:
                     fathomed_nodes.append(node)
 
+
+        print(i)
         self.optimal_solution = best_solution
-        self.to_junction_coordinates(best_solution)
+        self.picked_junctions = self.to_junction_coordinates(best_solution)
         self.optimal_value = F
