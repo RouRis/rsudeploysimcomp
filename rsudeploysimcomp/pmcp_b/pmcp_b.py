@@ -1,7 +1,8 @@
 import numpy as np
 
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
 from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import generate_deployment_file, RSU_SIM_Interface
+
 
 class PMCB_P:
     def __init__(self, sumoparser):
@@ -20,17 +21,17 @@ class PMCB_P:
         self.picked_junctions = set()
         self.rsu_counter = 0
         self.deployment_csv_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_csv_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_parquet_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
         )
 
     def run(self):

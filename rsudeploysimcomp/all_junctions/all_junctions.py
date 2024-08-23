@@ -1,5 +1,5 @@
-from rsudeploysimcomp.utils.utils import load_config, adjust_coordinates_by_offsets
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import generate_deployment_file, RSU_SIM_Interface
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
+from rsudeploysimcomp.utils.utils import load_config
 
 
 class AllJunctions:
@@ -11,17 +11,17 @@ class AllJunctions:
         self.avg_distance = -1
         self.picked_junctions = None
         self.deployment_csv_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_csv_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_parquet_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
         )
         self.run()
 
@@ -34,4 +34,3 @@ class AllJunctions:
         generate_deployment_file(self.picked_junctions, self.deployment_csv_path, self.deployment_parquet_path)
         self.rsu_sim_interface.trigger_rsu_simulator()
         self.coverage, self.avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
-

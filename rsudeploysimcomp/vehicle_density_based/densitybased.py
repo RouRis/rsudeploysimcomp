@@ -1,6 +1,11 @@
-from rsudeploysimcomp.utils.utils import load_config, adjust_coordinates_by_offsets, find_closest_junction, new_location_is_within_reach
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import generate_deployment_file, RSU_SIM_Interface
-from math import sqrt
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
+from rsudeploysimcomp.utils.utils import (
+    adjust_coordinates_by_offsets,
+    find_closest_junction,
+    load_config,
+    new_location_is_within_reach,
+)
+
 
 class DensityBased:
     def __init__(self, sumoparser):
@@ -8,17 +13,17 @@ class DensityBased:
         self.rsu_radius = self.config["general"]["rsu_radius"]
         self.num_rsus = self.config["general"]["num_rsus"]
         self.deployment_csv_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_csv_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_parquet_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
         )
         self.sumoparser = sumoparser
         self.rsu_sim_interface = RSU_SIM_Interface()
@@ -50,8 +55,12 @@ class DensityBased:
             rsu_location = find_closest_junction(self.sumoparser, center_x, center_y)
             adjusted_center_x, adjusted_center_y = adjust_coordinates_by_offsets(self.sumoparser, rsu_location)
             # Check if the location is within the reach of any already picked RSU
-            if not new_location_is_within_reach((adjusted_center_x, adjusted_center_y), self.picked_junctions, self.rsu_radius):
+            if not new_location_is_within_reach(
+                (adjusted_center_x, adjusted_center_y), self.picked_junctions, self.rsu_radius
+            ):
                 self.picked_junctions.add((adjusted_center_x, adjusted_center_y))
+
+        print(self.picked_junctions)
 
         generate_deployment_file(self.picked_junctions, self.deployment_csv_path, self.deployment_parquet_path)
         self.rsu_sim_interface.trigger_rsu_simulator()

@@ -28,30 +28,6 @@ def convert_csv_to_parquet(csv_file_path, parquet_file_path):
     df.to_parquet(parquet_file_path, index=False)
 
 
-def parse_output_file(parquet_file_path, rsu_radius=1000):
-    # Read the Parquet file into a DataFrame
-    df = pd.read_parquet(parquet_file_path)
-
-    relevant_data = df[df["agent_id"] < 200000]
-    relevant_data = relevant_data[relevant_data["selected_agent"] >= 200000]
-
-    # Filter rows where the distance is within the reach of the RSU
-    covered = relevant_data[relevant_data["distance"] <= rsu_radius]
-
-    # Total number of car records (agent_id > 0)
-    total_car_records = len(relevant_data)
-
-    # Number of covered car records
-    covered_car_records = len(covered)
-
-    # Calculate the coverage percentage
-    coverage_percentage = (covered_car_records / total_car_records) * 100 if total_car_records > 0 else 0
-
-    average_distance = relevant_data["distance"].mean() if total_car_records > 0 else float("nan")
-
-    return coverage_percentage, average_distance
-
-
 def generate_deployment_file(junctions, csv_path, parquet_path):
     export_picked_locations_to_csv(csv_path, junctions)
     convert_csv_to_parquet(csv_path, parquet_path)
@@ -98,16 +74,44 @@ class RSU_SIM_Interface:
     def __init__(self):
         self.config = load_config()
         self.rsu_radius = self.config["general"]["rsu_radius"]
-
-    def get_metrics_from_simulator(self):
-        tx_data_parquet_path = (
+        self.tx_data_parquet_path = (
             self.config["general"]["base_path"]
             + self.config["rsu_interface"]["output_path"]
             + self.config["rsu_interface"]["scenario"]
             + "/tx_data.parquet"
         )
 
-        return parse_output_file(tx_data_parquet_path, rsu_radius=self.rsu_radius)
+    def parse_relevant_data(self):
+        # Read the Parquet file into a DataFrame
+        # But only relevant Data: where link-sender is a vehicle, and link-receiver is a rsu
+        df = pd.read_parquet(self.tx_data_parquet_path)
+
+        relevant_data = df[df["agent_id"] < 200000]
+        relevant_data = relevant_data[relevant_data["selected_agent"] >= 200000]
+
+        return relevant_data
+
+    def parse_coverage_and_avg_distance(self, rsu_radius=1000):
+        relevant_data = self.parse_relevant_data()
+
+        # Filter rows where the distance is within the reach of the RSU
+        covered = relevant_data[relevant_data["distance"] <= rsu_radius]
+
+        # Total number of car records (agent_id > 0)
+        total_car_records = len(relevant_data)
+
+        # Number of covered car records
+        covered_car_records = len(covered)
+
+        # Calculate the coverage percentage
+        coverage_percentage = (covered_car_records / total_car_records) * 100 if total_car_records > 0 else 0
+
+        average_distance = relevant_data["distance"].mean() if total_car_records > 0 else float("nan")
+
+        return coverage_percentage, average_distance
+
+    def get_metrics_from_simulator(self):
+        return self.parse_coverage_and_avg_distance(rsu_radius=self.rsu_radius)
 
     def trigger_rsu_simulator(self):
         base_path = self.config["general"]["base_path"]

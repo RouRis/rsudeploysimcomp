@@ -3,10 +3,7 @@ import random
 import pygad
 
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
-from rsudeploysimcomp.utils.utils import (
-    adjust_coordinates_by_offsets,
-    find_closest_junction,
-    load_config)
+from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
 
 
 class GARSUD:
@@ -33,17 +30,17 @@ class GARSUD:
 
         self.base_path = self.config["general"]["base_path"]
         self.deployment_csv_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_csv_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_parquet_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
         )
 
     def _generate_initial_population(self):

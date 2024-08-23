@@ -8,17 +8,16 @@ class BranchAndBound:
     def __init__(self, sumoparser):
         self.config = load_config()
         self.deployment_csv_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_csv_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
         )
-
         self.deployment_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_parquet_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
         )
         self.num_rsus = self.config["general"]["num_rsus"]  # number of RSUs to be deployed
         self.sumoparser = sumoparser
@@ -101,8 +100,6 @@ class BranchAndBound:
                 if LB < F:
                     fathomed_nodes.append(node)
 
-
-        print(i)
         self.optimal_solution = best_solution
         self.picked_junctions = self.to_junction_coordinates(best_solution)
         self.optimal_value = F
