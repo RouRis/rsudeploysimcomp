@@ -1,4 +1,5 @@
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file, \
+    run_pipeline
 from rsudeploysimcomp.utils.utils import (
     adjust_coordinates_by_offsets,
     find_closest_junction,
@@ -9,7 +10,10 @@ from rsudeploysimcomp.utils.utils import (
 
 class DensityBased:
     def __init__(self, sumoparser):
+        print("DensityBased Initialization...\n")
+
         self.config = load_config()
+        self.name = "DensityBased"
         self.rsu_radius = self.config["general"]["rsu_radius"]
         self.num_rsus = self.config["general"]["num_rsus"]
         self.deployment_csv_path = (
@@ -60,8 +64,8 @@ class DensityBased:
             ):
                 self.picked_junctions.add((adjusted_center_x, adjusted_center_y))
 
-        print(self.picked_junctions)
-
-        generate_deployment_file(self.picked_junctions, self.deployment_csv_path, self.deployment_parquet_path)
-        self.rsu_sim_interface.trigger_rsu_simulator()
-        self.coverage, self.avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
+        self.coverage, self.avg_distance = run_pipeline(algorithm_name=self.name,
+                                                        picked_junctions=self.picked_junctions,
+                                                        deployment_csv_path=self.deployment_csv_path,
+                                                        deployment_parquet_path=self.deployment_parquet_path,
+                                                        rsu_sim_interface=self.rsu_sim_interface)

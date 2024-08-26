@@ -73,6 +73,7 @@ def parse_net_offset():
 
 class SUMOParser:
     def __init__(self):
+        print("SUMOParser Initialization...\n")
         self.config = load_config()
         self.grid_size = int(self.config["general"]["grid_size"])  # Number of cells per dimension
         self.M = np.zeros((self.grid_size, self.grid_size), dtype=int)

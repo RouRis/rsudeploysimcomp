@@ -2,13 +2,16 @@ import random
 
 import pygad
 
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file, \
+    run_pipeline
 from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
 
 
 class GARSUD:
-    def __init__(self, sumoparser, plotter):
-        self.plotter = plotter
+    def __init__(self, sumoparser):
+        print("GARSUD Initialization...\n")
+
+        self.name = 'GARSUD'
         self.config = load_config()
         self.ga_instance = None
         self.picked_junctions = []
@@ -30,17 +33,17 @@ class GARSUD:
 
         self.base_path = self.config["general"]["base_path"]
         self.deployment_csv_path = (
-            self.config["general"]["base_path"]
-            + self.config["rsu_interface"]["input_path"]
-            + self.config["rsu_interface"]["scenario"]
-            + self.config["rsu_interface"]["deployment_csv_path"]
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-            self.config["general"]["base_path"]
-            + self.config["rsu_interface"]["input_path"]
-            + self.config["rsu_interface"]["scenario"]
-            + self.config["rsu_interface"]["deployment_parquet_path"]
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["input_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + self.config["rsu_interface"]["deployment_parquet_path"]
         )
 
     def _generate_initial_population(self):
@@ -105,7 +108,9 @@ class GARSUD:
     def solution_to_metrics(self, solution):
         junctions = self.grid_index_to_junction_coordinates(solution)
         # generate Deployment Input Files
-        generate_deployment_file(junctions, self.deployment_csv_path, self.deployment_parquet_path)
-        self.rsu_sim_interface.trigger_rsu_simulator()
-        coverage, avg_distance = self.rsu_sim_interface.get_metrics_from_simulator()
+        coverage, avg_distance = run_pipeline(algorithm_name=self.name,
+                                              picked_junctions=junctions,
+                                              deployment_csv_path=self.deployment_csv_path,
+                                              deployment_parquet_path=self.deployment_parquet_path,
+                                              rsu_sim_interface=self.rsu_sim_interface)
         return coverage, avg_distance

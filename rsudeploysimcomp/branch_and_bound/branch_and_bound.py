@@ -6,6 +6,8 @@ from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_clo
 
 class BranchAndBound:
     def __init__(self, sumoparser):
+        print("BranchAndBound Initialization...\n")
+
         self.config = load_config()
         self.deployment_csv_path = (
             self.config["general"]["base_path"]

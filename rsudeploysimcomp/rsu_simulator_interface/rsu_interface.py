@@ -1,5 +1,6 @@
 import subprocess
-
+import time
+import os
 import pandas as pd
 
 from rsudeploysimcomp.utils.utils import load_config
@@ -35,7 +36,6 @@ def generate_deployment_file(junctions, csv_path, parquet_path):
 
 def run_command(command):
     result = subprocess.run(command, capture_output=True, text=True)
-
     # Check if an error occurred
     if result.returncode != 0:
         print("Error executing the command:")
@@ -51,34 +51,41 @@ def prep_position_files(prep_disolv_path, configs_path):
         "--config",
         configs_path + "/positions.toml",
     ]
-
     run_command(command)
     # print("Prep position files done")
 
 
-def prep_link_files(disolv_path, configs_path):
+def prep_link_file(disolv_path, configs_path):
     command = [disolv_path + "/target/release/disolv-links", "--config", configs_path + "/links.toml"]
-
     run_command(command)
     # print("Prep link files done")
 
 
 def run_rsu_simulator(disolv_path, configs_path):
     command = [disolv_path + "/target/release/disolv-v2x", "--config", configs_path + "/disolv.toml"]
-
     run_command(command)
     # print("Run Simulator")
+
+
+def run_pipeline(algorithm_name, picked_junctions, deployment_csv_path, deployment_parquet_path, rsu_sim_interface):
+    generate_deployment_file(picked_junctions, deployment_csv_path, deployment_parquet_path)
+    # start_segment_time = time.perf_counter()
+    rsu_sim_interface.trigger_rsu_simulator()
+    # end_segment_time = time.perf_counter()
+    # print(algorithm_name + f" Pipeline Execution time: {end_segment_time - start_segment_time}")
+    return rsu_sim_interface.get_metrics_from_simulator()
 
 
 class RSU_SIM_Interface:
     def __init__(self):
         self.config = load_config()
         self.rsu_radius = self.config["general"]["rsu_radius"]
+        self.num_rsus = self.config["general"]["num_rsus"]
         self.tx_data_parquet_path = (
-            self.config["general"]["base_path"]
-            + self.config["rsu_interface"]["output_path"]
-            + self.config["rsu_interface"]["scenario"]
-            + "/tx_data.parquet"
+                self.config["general"]["base_path"]
+                + self.config["rsu_interface"]["output_path"]
+                + self.config["rsu_interface"]["scenario"]
+                + "/tx_data.parquet"
         )
 
     def parse_relevant_data(self):
@@ -118,9 +125,24 @@ class RSU_SIM_Interface:
         prep_disolv_path = base_path + self.config["rsu_interface"]["prep_disolv_path"]
         disolv_path = base_path + self.config["rsu_interface"]["disolv_path"]
         configs_path = (
-            base_path + self.config["rsu_interface"]["configs_path"] + self.config["rsu_interface"]["scenario"]
+                base_path + self.config["rsu_interface"]["configs_path"] + self.config["rsu_interface"]["scenario"]
         )
 
+        # 1 - prep-disolv (prepare positions file)
+        # start_segment_time = time.perf_counter()
         prep_position_files(prep_disolv_path, configs_path)
-        prep_link_files(disolv_path, configs_path)
+        # end_segment_time = time.perf_counter()
+        # print(f"prep-disolv (prepare positions file) Execution time: {end_segment_time - start_segment_time}")
+
+        # 2 - disolv (prepare link file)
+        # start_segment_time = time.perf_counter()
+        prep_link_file(disolv_path, configs_path)
+        # end_segment_time = time.perf_counter()
+        # print(f"disolv (prepare link file) Execution time: {end_segment_time - start_segment_time}")
+
+        # 3 - run disolv
+        # start_segment_time = time.perf_counter()
         run_rsu_simulator(disolv_path, configs_path)
+        # end_segment_time = time.perf_counter()
+        # print(f"run disolv Execution time: {end_segment_time - start_segment_time}")
+

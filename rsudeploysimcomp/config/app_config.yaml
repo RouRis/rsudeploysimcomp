@@ -1,35 +1,30 @@
+branch_and_bound:
+  deployment_csv: rsu_deployment_b&b.csv
+  deployment_parquet: rsu_deployment_b&b.parquet
+garsud:
+  mutation_percent_genes: 10
+  num_generations: 2
+  num_parents_mating: 10
+  sol_per_pop: 10
 general:
-  rsu_radius: 1000
-  num_rsus: 5
-  grid_size: 32
   base_path: /Users/rouvenrischert
+  grid_size: 32
+  num_rsus: 7
+  plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
+  rsu_radius: 100
   rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
-  plot_path: /rsudeploysimcomp/Plots
-
+pmcp_b: null
 rsu_interface:
-  scenario: /koln
-  prep_disolv_path: /Projects/Python/prep-disolv
-  disolv_path: /Projects/Rust/disolv
   configs_path: /Workspace/configs
-  output_path: /Workspace/output
-  input_path: /Workspace/input
   deployment_csv_path: /positions/rsu_deployment.csv
   deployment_parquet_path: /positions/rsu_deployment.parquet
+  disolv_path: /Projects/Rust/disolv
   fcd_parquet: /positions/koln_fcd.parquet
-
+  input_path: /Workspace/input
+  output_path: /Workspace/output
+  prep_disolv_path: /Projects/Python/prep-disolv
+  scenario: /koln
 sumo_interface:
   xml_parser:
     path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml
     path_to_net_xml_zip: ./data/net_files/Test/osm.net.xml.gz
-
-garsud:
-  num_generations: 20
-  num_parents_mating: 10
-  sol_per_pop: 10
-  mutation_percent_genes: 10
-
-pmcp_b:
-
-branch_and_bound:
-  deployment_csv: rsu_deployment_b&b.csv
-  deployment_parquet: rsu_deployment_b&b.parquet
