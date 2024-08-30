@@ -1,19 +1,26 @@
-branch_and_bound:
-  deployment_csv: rsu_deployment_b&b.csv
-  deployment_parquet: rsu_deployment_b&b.parquet
-garsud:
-  mutation_percent_genes: 10
-  num_generations: 2
-  num_parents_mating: 10
-  sol_per_pop: 10
+algorithms:
+  AllJunctions:
+    run: false
+  BranchAndBound:
+    run: false
+  DensityBased:
+    run: false
+  GARSUD:
+    num_generations: 5
+    num_parents_mating: 10
+    run: false
+    sol_per_pop: 10
+  PMCP_B:
+    run: run
 general:
   base_path: /Users/rouvenrischert
   grid_size: 32
-  num_rsus: 7
+  num_rsus: 5
   plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
   rsu_radius: 100
   rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
-pmcp_b: null
+plotter:
+  run_plot_deployment_map: false
 rsu_interface:
   configs_path: /Workspace/configs
   deployment_csv_path: /positions/rsu_deployment.csv
@@ -24,6 +31,7 @@ rsu_interface:
   output_path: /Workspace/output
   prep_disolv_path: /Projects/Python/prep-disolv
   scenario: /koln
+  track_execution_time: false
 sumo_interface:
   xml_parser:
     path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml

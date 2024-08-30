@@ -1,7 +1,6 @@
 import numpy as np
-import time
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file, \
-    run_pipeline
+
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, run_pipeline
 from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
 
 
@@ -43,11 +42,12 @@ class PMCB_P:
             self.update_projected_flows()
             self.pick_next_location()
             self.rsu_counter += 1
-        self.coverage, self.avg_distance = run_pipeline(algorithm_name=self.name,
-                                                        picked_junctions=self.picked_junctions,
-                                                        deployment_csv_path=self.deployment_csv_path,
-                                                        deployment_parquet_path=self.deployment_parquet_path,
-                                                        rsu_sim_interface=self.rsu_sim_interface)
+        self.coverage, self.avg_distance = run_pipeline(
+            picked_junctions=self.picked_junctions,
+            deployment_csv_path=self.deployment_csv_path,
+            deployment_parquet_path=self.deployment_parquet_path,
+            rsu_sim_interface=self.rsu_sim_interface,
+        )
 
     def update_projected_flows(self):
         # First iteration: Pick the location with the highest vehicle number

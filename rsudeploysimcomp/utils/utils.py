@@ -1,10 +1,10 @@
+import glob
+import json
 import os
 from math import sqrt
 
-import json
 import numpy as np
 import yaml
-import glob
 
 
 def load_config():
@@ -15,20 +15,21 @@ def load_config():
     return config
 
 
-def update_config_num_rsus(num_rsus):
+def update_config(num_rsus, rsu_radius):
     """
     Update the configuration file with a new number of RSUs.
     """
-    config_path = './config/app_config.yaml'
+    config_path = "./config/app_config.yaml"
 
-    with open(config_path, 'r') as file:
+    with open(config_path, "r") as file:
         config = yaml.safe_load(file)
 
     # Update the number of RSUs
     config["general"]["num_rsus"] = num_rsus
+    config["general"]["rsu_radius"] = rsu_radius
 
     # Save the updated configuration
-    with open(config_path, 'w') as file:
+    with open(config_path, "w") as file:
         yaml.safe_dump(config, file)
 
 
@@ -82,30 +83,47 @@ def convert_to_serializable(obj):
 
 
 def extract_data_from_result_json(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         data = json.load(file)
 
-    algorithm = data.get('algorithm')
-    num_rsus = data.get('num_rsus')
-    coverage = data.get('coverage')
-    avg_distance = data.get('avg_distance')
-    rsu_radius = data.get('rsu_radius')
+    algorithm = data.get("algorithm")
+    num_rsus = data.get("num_rsus")
+    coverage = data.get("coverage")
+    avg_distance = data.get("avg_distance")
+    rsu_radius = data.get("rsu_radius")
 
     return algorithm, num_rsus, rsu_radius, coverage, avg_distance
 
+
 def collect_data(file_pattern):
-    file_paths = glob.glob(file_pattern)
+    file_paths = sorted(glob.glob(file_pattern))
     data_by_algorithm = {}
+    data_by_num_rsus = {}
+    data_by_rsu_radius = {}
+
     for path in file_paths:
         algorithm, num_rsus, rsu_radius, coverage, avg_distance = extract_data_from_result_json(path)
 
         if algorithm not in data_by_algorithm:
-            data_by_algorithm[algorithm] = {'num_rsus': [], 'coverage': [], 'avg_distance': [], 'rsu_radius': []}
+            data_by_algorithm[algorithm] = {"num_rsus": [], "rsu_radius": [], "coverage": [], "avg_distance": []}
 
+        if (algorithm, rsu_radius) not in data_by_num_rsus:
+            data_by_num_rsus[(algorithm, rsu_radius)] = {"num_rsus": [], "coverage": [], "avg_distance": []}
 
-        data_by_algorithm[algorithm]['num_rsus'].append(num_rsus)
-        data_by_algorithm[algorithm]['coverage'].append(coverage)
-        data_by_algorithm[algorithm]['avg_distance'].append(avg_distance)
-        data_by_algorithm[algorithm]['rsu_radius'].append(rsu_radius)
+        if (algorithm, num_rsus) not in data_by_rsu_radius:
+            data_by_rsu_radius[(algorithm, num_rsus)] = {"rsu_radius": [], "coverage": [], "avg_distance": []}
 
-    return data_by_algorithm
+        data_by_algorithm[algorithm]["num_rsus"].append(num_rsus)
+        data_by_algorithm[algorithm]["coverage"].append(coverage)
+        data_by_algorithm[algorithm]["avg_distance"].append(avg_distance)
+        data_by_algorithm[algorithm]["rsu_radius"].append(rsu_radius)
+
+        data_by_num_rsus[(algorithm, rsu_radius)]["num_rsus"].append(num_rsus)
+        data_by_num_rsus[(algorithm, rsu_radius)]["coverage"].append(coverage)
+        data_by_num_rsus[(algorithm, rsu_radius)]["avg_distance"].append(avg_distance)
+
+        data_by_rsu_radius[(algorithm, num_rsus)]["rsu_radius"].append(rsu_radius)
+        data_by_rsu_radius[(algorithm, num_rsus)]["coverage"].append(coverage)
+        data_by_rsu_radius[(algorithm, num_rsus)]["avg_distance"].append(avg_distance)
+
+    return data_by_algorithm, data_by_num_rsus, data_by_rsu_radius

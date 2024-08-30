@@ -3,7 +3,7 @@
     "num_rsus": 5,
     "rsu_radius": 100,
     "coverage": 84.16041591631563,
-    "avg_distance": 61.37861633300781,
+    "avg_distance": 61.37862014770508,
     "coverage_per_timestep": [
         100.0,
         100.0,

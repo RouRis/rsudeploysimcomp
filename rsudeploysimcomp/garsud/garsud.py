@@ -1,9 +1,9 @@
 import random
+from collections import OrderedDict
 
 import pygad
 
-from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, generate_deployment_file, \
-    run_pipeline
+from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface, run_pipeline
 from rsudeploysimcomp.utils.utils import adjust_coordinates_by_offsets, find_closest_junction, load_config
 
 
@@ -11,7 +11,7 @@ class GARSUD:
     def __init__(self, sumoparser):
         print("GARSUD Initialization...\n")
 
-        self.name = 'GARSUD'
+        self.name = "GARSUD"
         self.config = load_config()
         self.ga_instance = None
         self.picked_junctions = []
@@ -20,9 +20,11 @@ class GARSUD:
         self.coverage = -1
         self.avg_distance = -1
 
-        self.num_generations = self.config["garsud"]["num_generations"]
-        self.num_parents_mating = self.config["garsud"]["num_parents_mating"]
-        self.sol_per_pop = self.config["garsud"]["sol_per_pop"]
+        self.fitness_cache = OrderedDict()
+
+        self.num_generations = self.config["algorithms"]["GARSUD"]["num_generations"]
+        self.num_parents_mating = self.config["algorithms"]["GARSUD"]["num_parents_mating"]
+        self.sol_per_pop = self.config["algorithms"]["GARSUD"]["sol_per_pop"]
         self.num_rsus = self.config["general"]["num_rsus"]
         self.grid_size = self.config["general"]["grid_size"]
         self.number_locations = self.grid_size * self.grid_size
@@ -33,18 +35,19 @@ class GARSUD:
 
         self.base_path = self.config["general"]["base_path"]
         self.deployment_csv_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_csv_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_csv_path"]
         )
 
         self.deployment_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["input_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + self.config["rsu_interface"]["deployment_parquet_path"]
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["input_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + self.config["rsu_interface"]["deployment_parquet_path"]
         )
+        self.cache_use_counter = 0
 
     def _generate_initial_population(self):
         # Generate random initial population (deployments)
@@ -54,7 +57,20 @@ class GARSUD:
         ]
 
     def fitness_func(self, ga_instance, solution, solution_idx):
-        coverage, avg_distance = self.solution_to_metrics(solution)
+        solution_tuple = tuple(solution)  # Convert solution to a tuple to make it hashable for the cache
+        # Check if the fitness of the solution is in the cache
+        if solution_tuple in self.fitness_cache:
+            self.cache_use_counter += 1
+            print(f"Fitness cache hit - #{self.cache_use_counter}")
+            coverage, avg_distance = self.fitness_cache[solution_tuple]
+        else:
+            # Calculate the fitness if not in cache
+            coverage, avg_distance = self.solution_to_metrics(solution)
+        # Update the cache with the new solution and its fitness
+        # if len(self.fitness_cache) >= 50:
+        # Remove the oldest item from the cache if it has more than 20 entries
+        #    self.fitness_cache.popitem(last=False)
+        self.fitness_cache[solution_tuple] = (coverage, avg_distance)
         return coverage, -avg_distance
 
     def setup_ga(self):
@@ -89,9 +105,10 @@ class GARSUD:
         # Run the genetic algorithm to perform the optimization
         self.ga_instance.run()
         # Convert Genotype (Indices of grids) to Phenotype (x,y of actual junctions)
-        solution, _, _ = self.ga_instance.best_solution()
+        solution, solution_fitness, _ = self.ga_instance.best_solution()
         self.picked_junctions = self.grid_index_to_junction_coordinates(solution)
-        self.coverage, self.avg_distance = self.solution_to_metrics(solution)
+        self.coverage = solution_fitness[0]
+        self.avg_distance = solution_fitness[1]
 
     def grid_index_to_junction_coordinates(self, solution):
         junctions = []
@@ -108,9 +125,11 @@ class GARSUD:
     def solution_to_metrics(self, solution):
         junctions = self.grid_index_to_junction_coordinates(solution)
         # generate Deployment Input Files
-        coverage, avg_distance = run_pipeline(algorithm_name=self.name,
-                                              picked_junctions=junctions,
-                                              deployment_csv_path=self.deployment_csv_path,
-                                              deployment_parquet_path=self.deployment_parquet_path,
-                                              rsu_sim_interface=self.rsu_sim_interface)
+        coverage, avg_distance = run_pipeline(
+            algorithm_name=self.name,
+            picked_junctions=junctions,
+            deployment_csv_path=self.deployment_csv_path,
+            deployment_parquet_path=self.deployment_parquet_path,
+            rsu_sim_interface=self.rsu_sim_interface,
+        )
         return coverage, avg_distance

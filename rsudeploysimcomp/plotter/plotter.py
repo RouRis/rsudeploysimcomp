@@ -1,130 +1,193 @@
+import json
+import os
+
 import matplotlib.pyplot as plt  # Importing Matplotlib for plotting
 import pandas as pd
-import os
-import json
 
 from rsudeploysimcomp.rsu_simulator_interface.rsu_interface import RSU_SIM_Interface
-from rsudeploysimcomp.utils.utils import *
+from rsudeploysimcomp.utils.utils import collect_data, convert_to_serializable, load_config
 
 
-def plot():
+def plot(num_rsus_range, rsu_radius_range):
     # Define the file pattern for your JSON files
-    file_pattern = './Results/*.json'
-
+    file_pattern = "./Results/*.json"
     # Collect data by algorithm
-    data_by_algorithm = collect_data(file_pattern)
-    # Plot the data for each algorithm
-    plot_coverage_by_algorithm_over_num_rsus(data_by_algorithm)
-    plot_avg_distance_by_algorithm_over_num_rsus(data_by_algorithm)
+    data_by_algorithm, data_by_num_rsus, data_by_rsu_radius = collect_data(file_pattern)
+    for rsu_radius in rsu_radius_range:
+        # Plot the data for each algorithm
+        plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius)
+        plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius)
 
-    plot_coverage_by_algorithm_over_rsu_radius(data_by_algorithm)
-    plot_avg_distance_by_algorithm_over_rsu_radius(data_by_algorithm)
+    for num_rsus in num_rsus_range:
+        plot_coverage_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
+        plot_avg_distance_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
 
 
-def plot_coverage_by_algorithm_over_num_rsus(data_by_algorithm):
+def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted):
     plt.figure(figsize=(12, 8))
-    for algorithm, data in data_by_algorithm.items():
-        plt.plot(data['num_rsus'], data['coverage'], marker='o', linestyle='-', label=algorithm)
-    plt.xlabel('Number of RSUs')
-    plt.ylabel('Coverage (%)')
-    plt.title('Coverage vs. Number of RSUs by Algorithm')
+    for (algorithm, rsu_radius), data in data_by_num_rsus.items():
+        print(algorithm, rsu_radius)
+        if rsu_radius_wanted == rsu_radius:
+            plt.plot(
+                data["num_rsus"],
+                data["coverage"],
+                marker="o",
+                linestyle="-",
+                label=algorithm + " rsu_radius:" + str(rsu_radius_wanted),
+            )
+    plt.xlabel("Number of RSUs")
+    plt.ylabel("Coverage (%)")
+    plt.title("Coverage vs. Number of RSUs")
     plt.legend()
     plt.grid(True)
-    plt.savefig("./Plots/Coverage_over_NUM_RSU.png")
+    plt.savefig(f"./Plots/Coverage_over_NUM_RSU_with_radius_{rsu_radius_wanted}.png")
     plt.show()
 
 
-def plot_avg_distance_by_algorithm_over_num_rsus(data_by_algorithm):
+def plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted):
     plt.figure(figsize=(12, 8))
-    for algorithm, data in data_by_algorithm.items():
-        plt.plot(data['num_rsus'], data['avg_distance'], marker='o', linestyle='-', label=algorithm)
-    plt.xlabel('Number of RSUs')
-    plt.ylabel('Average Distance')
-    plt.title('Average Distance vs. Number of RSUs by Algorithm')
+    for (algorithm, rsu_radius), data in data_by_num_rsus.items():
+        if rsu_radius_wanted == rsu_radius:
+            plt.plot(
+                data["num_rsus"],
+                [abs(el) for el in data["avg_distance"]],
+                marker="o",
+                linestyle="-",
+                label=algorithm + " rsu_radius:" + str(rsu_radius_wanted),
+            )
+    plt.xlabel("Number of RSUs")
+    plt.ylabel("Average Distance")
+    plt.title("Average Distance vs. Number of RSUs")
     plt.legend()
     plt.grid(True)
-    plt.savefig("./Plots/Avg_Distance_over_NUM_RSU.png")
+    plt.savefig(f"./Plots/Avg_Distance_over_NUM_RSU_with_radius_{rsu_radius_wanted}.png")
     plt.show()
 
 
-def plot_coverage_by_algorithm_over_rsu_radius(data_by_algorithm):
+def plot_coverage_by_algorithm_over_rsu_radius(data_by_algorithm, num_rsus_wanted):
     plt.figure(figsize=(12, 8))
-    for algorithm, data in data_by_algorithm.items():
-        plt.plot(data['rsu_radius'], data['coverage'], marker='o', linestyle='-', label=algorithm)
-    plt.xlabel('RSU Radius')
-    plt.ylabel('Coverage (%)')
-    plt.title('Coverage vs. RSU Radius by Algorithm')
+    for (algorithm, num_rsus), data in data_by_algorithm.items():
+        if num_rsus_wanted == num_rsus:
+            plt.plot(
+                data["rsu_radius"],
+                data["coverage"],
+                marker="o",
+                linestyle="-",
+                label=algorithm + " num_rsus:" + str(num_rsus_wanted),
+            )
+    plt.xlabel("RSU Radius")
+    plt.ylabel("Coverage (%)")
+    plt.title("Coverage vs. RSU Radius")
     plt.legend()
     plt.grid(True)
-    plt.savefig("./Plots/Coverage_over_RSU_Radius.png")
+    plt.savefig(f"./Plots/Coverage_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.png")
     plt.show()
 
 
-def plot_avg_distance_by_algorithm_over_rsu_radius(data_by_algorithm):
+def plot_avg_distance_by_algorithm_over_rsu_radius(data_by_algorithm, num_rsus_wanted):
     plt.figure(figsize=(12, 8))
-    for algorithm, data in data_by_algorithm.items():
-        plt.plot(data['rsu_radius'], data['avg_distance'], marker='o', linestyle='-', label=algorithm)
-    plt.xlabel('RSU Radius')
-    plt.ylabel('Average Distance')
-    plt.title('Average Distance vs. RSU Radius by Algorithm')
+    for (algorithm, num_rsus), data in data_by_algorithm.items():
+        if num_rsus_wanted == num_rsus:
+            plt.plot(
+                data["rsu_radius"],
+                [abs(el) for el in data["avg_distance"]],
+                marker="o",
+                linestyle="-",
+                label=algorithm + " num_rsus:" + str(num_rsus_wanted),
+            )
+    plt.xlabel("RSU Radius")
+    plt.ylabel("Average Distance")
+    plt.title("Average Distance vs. RSU Radius")
     plt.legend()
     plt.grid(True)
-    plt.savefig("./Plots/Avg_Distance_over_RSU_Radius.png")
+    plt.savefig(f"./Plots/Avg_Distance_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.png.png")
+    plt.show()
+
+
+def plot_coverage_per_timestep(file_path):
+    # Step 1: Read the JSON file
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    # Step 2: Extract the coverage per timestep data
+    coverage_per_timestep = data["coverage_per_timestep"]
+
+    # Step 3: Plot the data
+    plt.figure(figsize=(10, 6))
+    plt.plot(coverage_per_timestep, marker="o", linestyle="-", color="b")
+    plt.xlabel("Time Step")
+    plt.ylabel("Coverage (%)")
+    plt.title("Coverage Over Time Steps")
+    plt.grid(True)
+    plt.show()
+
+
+def plot_avg_distance_per_timestep(file_path):
+    # Step 1: Read the JSON file
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    # Step 2: Extract the average distance per timestep data
+    avg_distance_per_timestep = data["avg_distance_per_timestep"]
+
+    # Step 3: Plot the data
+    plt.figure(figsize=(10, 6))
+    plt.plot(avg_distance_per_timestep, marker="o", linestyle="-", color="r")
+    plt.xlabel("Time Step")
+    plt.ylabel("Average Distance")
+    plt.title("Average Distance Over Time Steps")
+    plt.grid(True)
+    plt.show()
+
+
+def plot_coverage_histogram(file_path):
+    # Step 1: Read the JSON file
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    # Step 2: Extract the coverage and average distance data
+    coverage_per_timestep = data["coverage_per_timestep"]
+
+    # Step 3: Plot the histogram
+    plt.figure(figsize=(6, 6))
+    plt.hist(coverage_per_timestep, bins=20, color="b", alpha=0.7)
+    plt.xlabel("Coverage (%)")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Coverage Over Time Steps")
+    plt.grid(True)
+    plt.show()
+
+
+def plot_avg_distance_histogram(file_path):
+    # Step 1: Read the JSON file
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    # Step 2: Extract the coverage and average distance data
+    avg_distance_per_timestep = data["avg_distance_per_timestep"]
+
+    # Step 3: Plot the histogram
+    plt.figure(figsize=(6, 6))
+    plt.hist(avg_distance_per_timestep, bins=20, color="r", alpha=0.7)
+    plt.xlabel("Average Distance")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Average Distance Over Time Steps")
+    plt.grid(True)
     plt.show()
 
 
 class Plotter:
-    def __init__(self, all_junctions):
+    def __init__(self):
         print("Plotter Initialization...\n")
-        self.all_junctions = all_junctions
+        config = load_config()
+        self.run_plot_deployment_map = bool(config["plotter"]["run_plot_deployment_map"])
+        self.all_junctions = None
         self.rsu_sim_interface = RSU_SIM_Interface()
 
     def run(self, algorithm_name, rsu_positions, coverage, avg_distance, save_path=None):
-        self.plot_deployment_map(rsu_positions, algorithm_name, coverage, avg_distance, save_path)
+        if self.all_junctions is not None and self.run_plot_deployment_map:
+            self.plot_deployment_map(rsu_positions, algorithm_name, coverage, avg_distance, save_path)
         self.collect_coverage_data(algorithm_name, coverage, avg_distance)
-        # self.plot_histo_shortest_distance_overall(algorithm_name)
-        # self.plot_histo_avg_distance_per_timestep(algorithm_name)
-        # self.plot_histo_coverage_per_timestep(algorithm_name)
-
-    def plot_histo_avg_distance_per_timestep(self, algorithm_name):
-        relevant_data = self.rsu_sim_interface.parse_relevant_data()
-        # Step 1: Group by time_step and calculate the average distance
-        avg_distance_per_timestep = relevant_data.groupby("time_step")["distance"].mean()
-        # Step 2: Plot a histogram of the average distances
-        plt.figure(figsize=(10, 6))
-        plt.hist(avg_distance_per_timestep, bins=50, edgecolor="black")
-        plt.title("Histogram of Average Distances per Time Step - " + algorithm_name)
-        plt.xlabel("Average Distance")
-        plt.ylabel("Frequency")
-        plt.show()
-
-    def plot_histo_coverage_per_timestep(self, algorithm_name):
-        relevant_data = self.rsu_sim_interface.parse_relevant_data()
-        # Step 2: Determine coverage - filter data based on RSU radius
-        relevant_data["within_coverage"] = relevant_data["distance"] <= self.rsu_sim_interface.rsu_radius
-
-        # Step 3: Calculate coverage percentage per RSU per time step
-        coverage_per_timestep_rsu = relevant_data.groupby(["time_step"])["within_coverage"].mean() * 100
-
-        # Optional: You might want to average this across RSUs to get a general view per timestep
-        coverage_per_timestep = coverage_per_timestep_rsu.groupby("time_step").mean()
-
-        plt.figure(figsize=(10, 6))
-        plt.hist(coverage_per_timestep, bins=30, edgecolor="black")
-        plt.title("Histogram of RSU Coverage Percentage per Time Step - " + algorithm_name)
-        plt.xlabel("Coverage Percentage")
-        plt.ylabel("Frequency")
-        plt.show()
-
-    def plot_histo_shortest_distance_overall(self, algorithm_name):
-        relevant_data = self.rsu_sim_interface.parse_relevant_data()
-        # Step 2: Plot a histogram of all distances
-        plt.figure(figsize=(10, 6))
-        plt.hist(relevant_data['distance'], bins=30, edgecolor='black')
-        plt.title("Histogram of Distances - " + algorithm_name)
-        plt.xlabel('Distance')
-        plt.ylabel('Frequency')
-        plt.show()
 
     def collect_coverage_data(self, algorithm_name, coverage, avg_distance):
         """
@@ -133,6 +196,7 @@ class Plotter:
         rsu_radius = self.rsu_sim_interface.rsu_radius
         num_rsus = self.rsu_sim_interface.num_rsus
 
+        # Step 1: Parse relevant data from the RSU simulator interface
         relevant_data = self.rsu_sim_interface.parse_relevant_data()
 
         # Step 2: Determine coverage - filter data based on RSU radius
@@ -141,10 +205,16 @@ class Plotter:
         # Step 3: Calculate coverage percentage per RSU per time step
         coverage_per_timestep_rsu = relevant_data.groupby(["time_step"])["within_coverage"].mean() * 100
 
-        # Average this across RSUs to get a general view per timestep
-        coverage_per_timestep = coverage_per_timestep_rsu.groupby("time_step").mean()
+        # Step 4: Calculate average distance per RSU per time step
+        avg_distance_per_timestep_rsu = relevant_data.groupby("time_step")["distance"].mean()
 
+        # Step 5: Average these across RSUs to get a general view per timestep
+        coverage_per_timestep = coverage_per_timestep_rsu.groupby("time_step").mean()
+        avg_distance_per_timestep = avg_distance_per_timestep_rsu.groupby("time_step").mean()
+
+        # Convert these Series to lists for serialization
         coverage_per_timestep_list = coverage_per_timestep.tolist()
+        avg_distance_per_timestep_list = avg_distance_per_timestep.tolist()
 
         # Prepare the data to be saved
         data_to_save = {
@@ -152,8 +222,9 @@ class Plotter:
             "num_rsus": num_rsus,
             "rsu_radius": rsu_radius,
             "coverage": coverage,
-            "avg_distance": avg_distance,
-            "coverage_per_timestep": coverage_per_timestep_list
+            "avg_distance": abs(avg_distance),
+            "coverage_per_timestep": coverage_per_timestep_list,
+            "avg_distance_per_timestep": avg_distance_per_timestep_list,
         }
 
         serializable_data = convert_to_serializable(data_to_save)
@@ -167,19 +238,17 @@ class Plotter:
         file_path = os.path.join(results_dir, f"{algorithm_name}_{num_rsus}_{rsu_radius}.json")
 
         # Save the data to a JSON file
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             json.dump(serializable_data, f, indent=4)
-
-        print(f"Coverage data for {algorithm_name} with {num_rsus} RSUs saved to {file_path}")
 
     def plot_deployment_map(self, rsu_positions, title, coverage, avg_distance, save_path=None):
         config = load_config()
 
         fcd_path = (
-                config["general"]["base_path"]
-                + config["rsu_interface"]["input_path"]
-                + config["rsu_interface"]["scenario"]
-                + config["rsu_interface"]["fcd_parquet"]
+            config["general"]["base_path"]
+            + config["rsu_interface"]["input_path"]
+            + config["rsu_interface"]["scenario"]
+            + config["rsu_interface"]["fcd_parquet"]
         )
 
         # Plot Junctions

@@ -1,6 +1,6 @@
 import subprocess
 import time
-import os
+
 import pandas as pd
 
 from rsudeploysimcomp.utils.utils import load_config
@@ -67,12 +67,9 @@ def run_rsu_simulator(disolv_path, configs_path):
     # print("Run Simulator")
 
 
-def run_pipeline(algorithm_name, picked_junctions, deployment_csv_path, deployment_parquet_path, rsu_sim_interface):
+def run_pipeline(picked_junctions, deployment_csv_path, deployment_parquet_path, rsu_sim_interface):
     generate_deployment_file(picked_junctions, deployment_csv_path, deployment_parquet_path)
-    # start_segment_time = time.perf_counter()
     rsu_sim_interface.trigger_rsu_simulator()
-    # end_segment_time = time.perf_counter()
-    # print(algorithm_name + f" Pipeline Execution time: {end_segment_time - start_segment_time}")
     return rsu_sim_interface.get_metrics_from_simulator()
 
 
@@ -82,10 +79,10 @@ class RSU_SIM_Interface:
         self.rsu_radius = self.config["general"]["rsu_radius"]
         self.num_rsus = self.config["general"]["num_rsus"]
         self.tx_data_parquet_path = (
-                self.config["general"]["base_path"]
-                + self.config["rsu_interface"]["output_path"]
-                + self.config["rsu_interface"]["scenario"]
-                + "/tx_data.parquet"
+            self.config["general"]["base_path"]
+            + self.config["rsu_interface"]["output_path"]
+            + self.config["rsu_interface"]["scenario"]
+            + "/tx_data.parquet"
         )
 
     def parse_relevant_data(self):
@@ -120,29 +117,45 @@ class RSU_SIM_Interface:
     def get_metrics_from_simulator(self):
         return self.parse_coverage_and_avg_distance(rsu_radius=self.rsu_radius)
 
+    def trigger_with_time_tracking(self, prep_disolv_path, disolv_path, configs_path):
+        # 1 - prep-disolv (prepare positions file)
+        start_segment_time = time.perf_counter()
+        prep_position_files(prep_disolv_path, configs_path)
+        end_segment_time = time.perf_counter()
+        print(f"prep-disolv (prepare positions file) Execution time: {end_segment_time - start_segment_time}")
+
+        # 2 - disolv (prepare link file)
+        start_segment_time = time.perf_counter()
+        prep_link_file(disolv_path, configs_path)
+        end_segment_time = time.perf_counter()
+        print(f"disolv (prepare link file) Execution time: {end_segment_time - start_segment_time}")
+
+        # 3 - run disolv
+        start_segment_time = time.perf_counter()
+        run_rsu_simulator(disolv_path, configs_path)
+        end_segment_time = time.perf_counter()
+        print(f"run disolv Execution time: {end_segment_time - start_segment_time}")
+
+    def trigger(self, prep_disolv_path, disolv_path, configs_path):
+        # 1 - prep-disolv (prepare positions file)
+        prep_position_files(prep_disolv_path, configs_path)
+        # 2 - disolv (prepare link file)
+        prep_link_file(disolv_path, configs_path)
+        # 3 - run disolv
+        run_rsu_simulator(disolv_path, configs_path)
+
     def trigger_rsu_simulator(self):
         base_path = self.config["general"]["base_path"]
         prep_disolv_path = base_path + self.config["rsu_interface"]["prep_disolv_path"]
         disolv_path = base_path + self.config["rsu_interface"]["disolv_path"]
         configs_path = (
-                base_path + self.config["rsu_interface"]["configs_path"] + self.config["rsu_interface"]["scenario"]
+            base_path + self.config["rsu_interface"]["configs_path"] + self.config["rsu_interface"]["scenario"]
         )
 
-        # 1 - prep-disolv (prepare positions file)
-        # start_segment_time = time.perf_counter()
-        prep_position_files(prep_disolv_path, configs_path)
-        # end_segment_time = time.perf_counter()
-        # print(f"prep-disolv (prepare positions file) Execution time: {end_segment_time - start_segment_time}")
-
-        # 2 - disolv (prepare link file)
-        # start_segment_time = time.perf_counter()
-        prep_link_file(disolv_path, configs_path)
-        # end_segment_time = time.perf_counter()
-        # print(f"disolv (prepare link file) Execution time: {end_segment_time - start_segment_time}")
-
-        # 3 - run disolv
-        # start_segment_time = time.perf_counter()
-        run_rsu_simulator(disolv_path, configs_path)
-        # end_segment_time = time.perf_counter()
-        # print(f"run disolv Execution time: {end_segment_time - start_segment_time}")
-
+        track_execution_time = bool(self.config["rsu_interface"]["track_execution_time"])
+        if track_execution_time:
+            self.trigger_with_time_tracking(
+                prep_disolv_path=prep_disolv_path, disolv_path=disolv_path, configs_path=configs_path
+            )
+        else:
+            self.trigger(prep_disolv_path=prep_disolv_path, disolv_path=disolv_path, configs_path=configs_path)
