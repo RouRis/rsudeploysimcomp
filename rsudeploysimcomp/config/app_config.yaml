@@ -1,27 +1,47 @@
-algorithms:
+Algorithms:
   AllJunctions:
     run: false
+    track_exec_time: false
   BranchAndBound:
     run: false
+    track_exec_time: false
   DensityBased:
-    run: false
+    run: true
+    track_exec_time: true
   GARSUD:
-    num_generations: 5
-    num_parents_mating: 10
-    run: false
-    sol_per_pop: 10
+    keep_parents: 15
+    num_generations: 3
+    num_parents_mating: 15
+    optimization_param:
+      avg_distance: false
+      coverage: true
+    run: true
+    sol_per_pop: 40
+    track_exec_time: true
   PMCP_B:
-    run: run
-general:
+    run: true
+    track_exec_time: true
+General:
   base_path: /Users/rouvenrischert
-  grid_size: 32
-  num_rsus: 5
+  grid_size:
+  - 36
+  num_rsus:
+  - 325
+  - 350
+  - 375
+  - 400
   plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
-  rsu_radius: 100
+  rsu_radius:
+  - 200
   rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
-plotter:
+  track_exec_time: true
+Plotter:
   run_plot_deployment_map: false
-rsu_interface:
+SUMOInterface:
+  xml_parser:
+    path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml
+    path_to_net_xml_zip: ./data/net_files/Test/osm.net.xml.gz
+VanetInterface:
   configs_path: /Workspace/configs
   deployment_csv_path: /positions/rsu_deployment.csv
   deployment_parquet_path: /positions/rsu_deployment.parquet
@@ -31,8 +51,4 @@ rsu_interface:
   output_path: /Workspace/output
   prep_disolv_path: /Projects/Python/prep-disolv
   scenario: /koln
-  track_execution_time: false
-sumo_interface:
-  xml_parser:
-    path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml
-    path_to_net_xml_zip: ./data/net_files/Test/osm.net.xml.gz
+  track_execution_time: true

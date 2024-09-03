@@ -1,17 +1,11 @@
-from rsudeploysimcomp.all_junctions.all_junctions import AllJunctions
-from rsudeploysimcomp.branch_and_bound.branch_and_bound import BranchAndBound
-from rsudeploysimcomp.garsud.garsud import GARSUD
-from rsudeploysimcomp.plotter.plotter import (
-    Plotter,
-    plot_avg_distance_histogram,
-    plot_avg_distance_per_timestep,
-    plot_coverage_histogram,
-    plot_coverage_per_timestep,
-)
-from rsudeploysimcomp.pmcp_b.pmcp_b import PMCB_P
-from rsudeploysimcomp.sumo_interface.sumo_parser import SUMOParser
-from rsudeploysimcomp.utils.utils import load_config
-from rsudeploysimcomp.vehicle_density_based.densitybased import DensityBased
+from rsudeploysimcomp.AllJunctions.all_junctions import AllJunctions
+from rsudeploysimcomp.BranchAndBound.branch_and_bound import BranchAndBound
+from rsudeploysimcomp.DensityBased.densitybased import DensityBased
+from rsudeploysimcomp.GARSUD.garsud import GARSUD
+from rsudeploysimcomp.Plotter.plotter import Plotter, plot
+from rsudeploysimcomp.PMCP_B.pmcp_b import PMCB_P
+from rsudeploysimcomp.SUMOInterface.sumoparser import SUMOParser
+from rsudeploysimcomp.Utils.utils import get_hyperparameter, load_config, update_config
 
 # TODO: Schleife - über RSU-radius - über Num_RSUS (+2)
 # TODO: Plot Coverage over NUM RSU
@@ -19,31 +13,49 @@ from rsudeploysimcomp.vehicle_density_based.densitybased import DensityBased
 # TODO: Plot Avg Distance Histogram per time-step
 # TODO: Plot Avg Distance Histogram (interval 50m)
 # TODO: Plot Coverage Histogram per time-step / or over all time
-# TODO: Execution Time of Pipeline
+# TODO: ExecTime of Pipeline
 
 
 def main():
     config = load_config()
-    num_rsus = config["general"]["num_rsus"]
-    grid_size = config["general"]["grid_size"]
 
-    rsu_radius = config["general"]["rsu_radius"]
-    run_garsud = bool(config["algorithms"]["GARSUD"]["run"])
-    run_pmcp_b = bool(config["algorithms"]["PMCP_B"]["run"])
-    run_all_junctions = bool(config["algorithms"]["AllJunctions"]["run"])
-    run_density_based = bool(config["algorithms"]["DensityBased"]["run"])
-    run_branch_and_bound = bool(config["algorithms"]["BranchAndBound"]["run"])
+    num_rsus = config["General"]["num_rsus"]
+    rsu_radius = config["General"]["rsu_radius"]
+    grid_size = config["General"]["grid_size"]
+
+    run_garsud = bool(config["Algorithms"]["GARSUD"]["run"])
+    run_pmcp_b = bool(config["Algorithms"]["PMCP_B"]["run"])
+    run_all_junctions = bool(config["Algorithms"]["AllJunctions"]["run"])
+    run_density_based = bool(config["Algorithms"]["DensityBased"]["run"])
+    run_branch_and_bound = bool(config["Algorithms"]["BranchAndBound"]["run"])
+
+    # Quick info message to show which algorithms will run
+    print("Running simulations with the following algorithms:")
+    if run_garsud:
+        print("  - GARSUD")
+    if run_pmcp_b:
+        print("  - PMCP_B")
+    if run_all_junctions:
+        print("  - AllJunctions")
+    if run_density_based:
+        print("  - DensityBased")
+    if run_branch_and_bound:
+        print("  - BranchAndBound")
+
+    print("-" * 40)
 
     # Path to Plot-Directory:
     plot_directory_path = (
-        config["general"]["base_path"]
-        + config["general"]["rsudeploysimcomp_path"]
-        + config["general"]["plot_map_path"]
+        config["General"]["base_path"]
+        + config["General"]["rsudeploysimcomp_path"]
+        + config["General"]["plot_map_path"]
     )
 
     print("Configuration: num_rsus={} | grid_size={} | rsu_radius={}\n".format(num_rsus, grid_size, rsu_radius))
 
     sumoparser = SUMOParser()
+    sumoparser.check_grid_size_radius_relation()
+
     plotter = Plotter()
 
     if run_all_junctions:
@@ -116,18 +128,29 @@ def main():
         branch_and_bound.run()
 
     print("\nFinished")
+    print("-" * 40)
 
 
 if __name__ == "__main__":
-    rsu_radius_range = range(100, 1000, 100)
-    num_rsus_range = range(1, 10, 2)
-    # for rsu_radius_counter in rsu_radius_range:
-    #    for num_rsus_counter in num_rsus_range:
-    #        update_config(num_rsus_counter, rsu_radius_counter)
-    #        main()
-    # plot(num_rsus_range, rsu_radius_range)
+    conf = load_config()
 
-    plot_coverage_per_timestep("./Results/PMCP_B_1_100.json")
-    plot_avg_distance_per_timestep("./Results/PMCP_B_1_100.json")
-    plot_coverage_histogram("./Results/PMCP_B_1_100.json")
-    plot_avg_distance_histogram("./Results/PMCP_B_1_100.json")
+    num_rsus_list = get_hyperparameter(conf, "num_rsus")
+    rsu_radius_list = get_hyperparameter(conf, "rsu_radius")
+    grid_size_list = get_hyperparameter(conf, "grid_size")
+
+    # Quick info message to show the picked hyperparameters
+    print("Running simulations with the following hyperparameters:")
+    print(f"  Grid Size: {grid_size_list}")
+    print(f"  RSU Radius: {rsu_radius_list}")
+    print(f"  Number of RSUs: {num_rsus_list}")
+    print("-" * 40)
+
+    for grid_size_counter in grid_size_list:
+        for rsu_radius_counter in rsu_radius_list:
+            for num_rsus_counter in num_rsus_list:
+                update_config(num_rsus_counter, rsu_radius_counter, grid_size_counter)
+                main()
+
+    update_config(num_rsus_list, rsu_radius_list, grid_size_list)
+
+    plot(num_rsus_list, rsu_radius_list)
