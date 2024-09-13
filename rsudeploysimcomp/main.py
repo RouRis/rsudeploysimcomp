@@ -2,7 +2,7 @@ from rsudeploysimcomp.AllJunctions.all_junctions import AllJunctions
 from rsudeploysimcomp.BranchAndBound.branch_and_bound import BranchAndBound
 from rsudeploysimcomp.DensityBased.densitybased import DensityBased
 from rsudeploysimcomp.GARSUD.garsud import GARSUD
-from rsudeploysimcomp.Plotter.plotter import Plotter, plot
+from rsudeploysimcomp.Plotter.plotter import Plotter, plot, plot_exec_time_algorithm, plot_exec_time_pipeline
 from rsudeploysimcomp.PMCP_B.pmcp_b import PMCB_P
 from rsudeploysimcomp.SUMOInterface.sumoparser import SUMOParser
 from rsudeploysimcomp.Utils.utils import get_hyperparameter, load_config, update_config
@@ -150,7 +150,17 @@ if __name__ == "__main__":
             for num_rsus_counter in num_rsus_list:
                 update_config(num_rsus_counter, rsu_radius_counter, grid_size_counter)
                 main()
+                pass
 
     update_config(num_rsus_list, rsu_radius_list, grid_size_list)
 
     plot(num_rsus_list, rsu_radius_list)
+
+    plot_exec_time_pipeline(
+        in_file="ExecTime/Pipeline/pipeline_exec_time.csv",
+        out_file="Plots/ExecTime/pipeline_exec_time.png",
+    )
+    plot_exec_time_algorithm(
+        in_file="ExecTime/Algorithms/algorithms_exec_time.csv",
+        out_file="Plots/ExecTime/algorithms_exec_time.png",
+    )

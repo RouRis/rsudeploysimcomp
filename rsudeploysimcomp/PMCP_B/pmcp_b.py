@@ -6,7 +6,7 @@ from rsudeploysimcomp.Utils.utils import (
     adjust_coordinates_by_offsets,
     find_closest_junction,
     load_config,
-    track_algorith_exec_time,
+    track_algorithm_exec_time,
 )
 from rsudeploysimcomp.VanetSimulatorInterface.vanet_sim_interface import VanetSimulatorInterface, run_pipeline
 
@@ -65,9 +65,11 @@ class PMCB_P:
             deployment_csv_path=self.deployment_csv_path,
             deployment_parquet_path=self.deployment_parquet_path,
             rsu_sim_interface=self.vanet_simulator_interface,
+            algorithm_name=self.name,
         )
         if self.track_exec_time:
-            track_algorith_exec_time(start_segment_time, self)
+            end_segment_time = time.perf_counter()
+            track_algorithm_exec_time(start_segment_time, end_segment_time, self)
 
     def update_projected_flows(self):
         # First iteration: Pick the location with the highest vehicle number

@@ -5,7 +5,7 @@ from rsudeploysimcomp.Utils.utils import (
     find_closest_junction,
     load_config,
     new_location_is_within_reach,
-    track_algorith_exec_time,
+    track_algorithm_exec_time,
 )
 from rsudeploysimcomp.VanetSimulatorInterface.vanet_sim_interface import VanetSimulatorInterface, run_pipeline
 
@@ -47,9 +47,9 @@ class DensityBased:
         """
         Runs the RSU deployment algorithm by selecting locations based on vehicle density.
         """
-        start_segment_time = -1
+        start_segment_time_alg = -1
         if self.track_exec_time:
-            start_segment_time = time.perf_counter()
+            start_segment_time_alg = time.perf_counter()
 
         # Convert the matrix M into a list of (x, y, density) tuples
         density_list = [(x, y, self.M[x, y]) for x in range(self.grid_size) for y in range(self.grid_size)]
@@ -78,7 +78,9 @@ class DensityBased:
             deployment_csv_path=self.deployment_csv_path,
             deployment_parquet_path=self.deployment_parquet_path,
             rsu_sim_interface=self.vanet_simulator_interface,
+            algorithm_name=self.name,
         )
 
         if self.track_exec_time:
-            track_algorith_exec_time(start_segment_time, self)
+            end_segment_time_alg = time.perf_counter()
+            track_algorithm_exec_time(start_segment_time_alg, end_segment_time_alg, self)

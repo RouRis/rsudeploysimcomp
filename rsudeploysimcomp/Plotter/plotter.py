@@ -10,20 +10,22 @@ from rsudeploysimcomp.VanetSimulatorInterface.vanet_sim_interface import VanetSi
 
 def plot(num_rsus_range, rsu_radius_range):
     # Define the file pattern for your JSON files
+    config = load_config()
     file_pattern = "./Results/*.json"
     # Collect data by algorithm
     data_by_algorithm, data_by_num_rsus, data_by_rsu_radius = collect_data(file_pattern)
     for rsu_radius in rsu_radius_range:
+        grid_size = config["RadiusGridsizeMapping"][rsu_radius]
         # Plot the data for each algorithm
-        plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius)
-        plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius)
+        plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius, grid_size)
+    #    plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius)
 
-    for num_rsus in num_rsus_range:
-        plot_coverage_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
-        plot_avg_distance_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
+    # for num_rsus in num_rsus_range:
+    #    plot_coverage_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
+    #    plot_avg_distance_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
 
 
-def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted):
+def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted, grid_size):
     plt.figure(figsize=(12, 8))
     for (algorithm, rsu_radius), data in data_by_num_rsus.items():
         if rsu_radius_wanted == rsu_radius:
@@ -35,14 +37,12 @@ def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted
                 label=algorithm + " rsu_radius:" + str(rsu_radius_wanted),
             )
 
-    plt.axhline(y=95, color="r", linestyle="--", label="95% Coverage")
-
     plt.xlabel("Number of RSUs")
     plt.ylabel("Coverage (%)")
     plt.title("Coverage vs. Number of RSUs")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"./Plots/Coverage_over_NUM_RSU_with_radius_{rsu_radius_wanted}.png")
+    plt.savefig(f"./Plots/Coverage_over_NUM_RSU__radius{rsu_radius_wanted}_grid{grid_size}.png")
     plt.show()
 
 
@@ -178,11 +178,74 @@ def plot_avg_distance_histogram(file_path):
     plt.show()
 
 
+def plot_exec_time_pipeline(in_file, out_file):
+    # Read the CSV file
+    df = pd.read_csv(in_file)
+
+    # Extract the columns for plotting
+    num_rsus = df["num_rsus"]
+    prep_disolv_time = df["prep_disolv_time"]
+    prep_link_time = df["prep_link_time"]
+    run_disolv_time = df["run_disolv_time"]
+
+    # Plot the scatter plot
+    plt.figure(figsize=(10, 6))
+    plt.scatter(num_rsus, prep_disolv_time, color="blue", label="Prep Dissolve Time")
+    plt.scatter(num_rsus, prep_link_time, color="green", label="Prep Link Time")
+    plt.scatter(num_rsus, run_disolv_time, color="red", label="Run Dissolve Time")
+
+    # Add titles and labels
+    plt.title("Execution Times vs. Number of RSUs")
+    plt.xlabel("Number of RSUs")
+    plt.ylabel("Execution Time (s)")
+    plt.legend()
+
+    # Show the plot
+    plt.savefig(out_file)  # Change the filename and format as needed
+
+
+def plot_exec_time_algorithm(in_file, out_file):
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(in_file)
+
+    # Create a scatter plot with different markers for each combination of algorithm and RSU radius
+    plt.figure(figsize=(12, 8))
+
+    # Group the data by 'algorithm' and 'rsu_radius'
+    grouped = df.groupby(["algorithm", "rsu_radius"])
+
+    # Assign different colors and markers for each group
+    markers = ["o", "s", "D", "^", "v", "<", ">"]
+    colors = plt.cm.viridis_r(range(len(grouped)))
+
+    for i, ((algo, radius), subset) in enumerate(grouped):
+        # Plot each group with different color and marker
+        plt.scatter(
+            subset["num_rsus"],
+            subset["exec_time"],
+            label=f"{algo} (Radius: {radius})",
+            color=colors[i % len(colors)],
+            marker=markers[i % len(markers)],
+        )
+
+    # Add titles and labels
+    plt.title("Execution Time vs. Number of RSUs for Different Algorithms and RSU Radii")
+    plt.xlabel("Number of RSUs")
+    plt.ylabel("Execution Time (s)")
+    plt.legend()
+
+    # Save the plot to the output file
+    plt.savefig(out_file)
+
+    # Show the plot
+    plt.show()
+
+
 class Plotter:
     def __init__(self):
         print("Plotter Initialization...\n")
-        config = load_config()
-        self.run_plot_deployment_map = bool(config["Plotter"]["run_plot_deployment_map"])
+        self.config = load_config()
+        self.run_plot_deployment_map = bool(self.config["Plotter"]["run_plot_deployment_map"])
         self.all_junctions = None
         self.rsu_sim_interface = VanetSimulatorInterface()
 
@@ -197,6 +260,7 @@ class Plotter:
         """
         rsu_radius = self.rsu_sim_interface.rsu_radius
         num_rsus = self.rsu_sim_interface.num_rsus
+        grid_size = self.rsu_sim_interface.grid_size
 
         # Step 1: Parse relevant data from the RSU simulator interface
         relevant_data = self.rsu_sim_interface.parse_relevant_data()
@@ -218,16 +282,34 @@ class Plotter:
         coverage_per_timestep_list = coverage_per_timestep.tolist()
         avg_distance_per_timestep_list = avg_distance_per_timestep.tolist()
 
-        # Prepare the data to be saved
-        data_to_save = {
-            "algorithm": algorithm_name,
-            "num_rsus": num_rsus,
-            "rsu_radius": rsu_radius,
-            "coverage": coverage,
-            "avg_distance": abs(avg_distance),
-            "coverage_per_timestep": coverage_per_timestep_list,
-            "avg_distance_per_timestep": avg_distance_per_timestep_list,
-        }
+        if algorithm_name == "GARSUD":
+            # Prepare the data to be saved
+            data_to_save = {
+                "algorithm": algorithm_name,
+                "num_generations": self.config["Algorithms"]["GARSUD"]["num_generations"],
+                "sol_per_pop": self.config["Algorithms"]["GARSUD"]["sol_per_pop"],
+                "keep_parents": self.config["Algorithms"]["GARSUD"]["keep_parents"],
+                "num_parents_mating": self.config["Algorithms"]["GARSUD"]["num_parents_mating"],
+                "num_rsus": num_rsus,
+                "rsu_radius": rsu_radius,
+                "grid_size": grid_size,
+                "coverage": coverage,
+                "avg_distance": abs(avg_distance),
+                "coverage_per_timestep": coverage_per_timestep_list,
+                "avg_distance_per_timestep": avg_distance_per_timestep_list,
+            }
+        else:
+            # Prepare the data to be saved
+            data_to_save = {
+                "algorithm": algorithm_name,
+                "num_rsus": num_rsus,
+                "rsu_radius": rsu_radius,
+                "grid_size": grid_size,
+                "coverage": coverage,
+                "avg_distance": abs(avg_distance),
+                "coverage_per_timestep": coverage_per_timestep_list,
+                "avg_distance_per_timestep": avg_distance_per_timestep_list,
+            }
 
         serializable_data = convert_to_serializable(data_to_save)
 

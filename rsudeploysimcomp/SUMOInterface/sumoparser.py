@@ -1,4 +1,3 @@
-import gzip
 import math
 import xml.etree.ElementTree as ET
 
@@ -8,8 +7,20 @@ from scipy.sparse import lil_matrix
 from rsudeploysimcomp.Utils.utils import load_config
 
 config = load_config()
-path_to_fcd_xml = config["SUMOInterface"]["xml_parser"]["path_to_fcd_xml"]
-path_to_net_xml_gx = config["SUMOInterface"]["xml_parser"]["path_to_net_xml_zip"]
+
+path_to_fcd_xml = (
+    config["General"]["base_path"]
+    + config["VanetInterface"]["raw_path"]
+    + config["VanetInterface"]["scenario"]
+    + "/koln_fcd.xml"
+)
+
+path_to_net_xml_gx = (
+    config["General"]["base_path"]
+    + config["VanetInterface"]["raw_path"]
+    + config["VanetInterface"]["scenario"]
+    + "/koln.net.xml"
+)
 
 
 def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
@@ -25,24 +36,23 @@ def find_element_attribute_in_xml_gz(gz_file_path, tag_name, attribute_name):
         The value of the specified attribute, or None if the tag or attribute is not found.
     """
     try:
-        with gzip.open(gz_file_path, "rb") as f_in:
-            # Create an iterator to parse the XML incrementally
-            context = ET.iterparse(f_in, events=("start", "end"))
+        # Create an iterator to parse the XML incrementally
+        context = ET.iterparse(gz_file_path, events=("start", "end"))
 
-            # Iterate through the parsed elements
-            for event, elem in context:
-                # Check if the current element matches the specified tag
-                if event == "start" and elem.tag == tag_name:
-                    # Extract the specified attribute
-                    attribute_value = elem.get(attribute_name)
-
-                    # Clear the element to free up memory
-                    elem.clear()
-
-                    return attribute_value
+        # Iterate through the parsed elements
+        for event, elem in context:
+            # Check if the current element matches the specified tag
+            if event == "start" and elem.tag == tag_name:
+                # Extract the specified attribute
+                attribute_value = elem.get(attribute_name)
 
                 # Clear the element to free up memory
                 elem.clear()
+
+                return attribute_value
+
+            # Clear the element to free up memory
+            elem.clear()
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
@@ -126,18 +136,17 @@ class SUMOParser:
 
     def parse_junctions(self):
         try:
-            with gzip.open(path_to_net_xml_gx, "rb") as f_in:
-                tree = ET.parse(f_in)
-                root = tree.getroot()
-                for junction in root.findall("junction"):
-                    self.junctions.append(
-                        {
-                            "id": junction.get("id"),
-                            "x": float(junction.get("x")),
-                            "y": float(junction.get("y")),
-                            "type": junction.get("type"),
-                        }
-                    )
+            tree = ET.parse(path_to_net_xml_gx)
+            root = tree.getroot()
+            for junction in root.findall("junction"):
+                self.junctions.append(
+                    {
+                        "id": junction.get("id"),
+                        "x": float(junction.get("x")),
+                        "y": float(junction.get("y")),
+                        "type": junction.get("type"),
+                    }
+                )
             self.junctions.sort(key=lambda j: (j["x"], j["y"]))
         except Exception as e:
             print(f"An error occurred while parsing junctions: {e}")

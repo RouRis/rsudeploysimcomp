@@ -6,37 +6,38 @@ Algorithms:
     run: false
     track_exec_time: false
   DensityBased:
-    run: true
+    run: false
     track_exec_time: true
   GARSUD:
-    keep_parents: 15
-    num_generations: 3
-    num_parents_mating: 15
+    keep_parents: 10
+    num_generations: 40
+    num_parents_mating: 10
     optimization_param:
       avg_distance: false
       coverage: true
     run: true
-    sol_per_pop: 40
+    sol_per_pop: 20
     track_exec_time: true
   PMCP_B:
-    run: true
+    run: false
     track_exec_time: true
 General:
   base_path: /Users/rouvenrischert
-  grid_size:
-  - 36
-  num_rsus:
-  - 325
-  - 350
-  - 375
-  - 400
+  grid_size: 100
+  num_rsus: 700
   plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
-  rsu_radius:
-  - 200
+  rsu_radius: 75
   rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
   track_exec_time: true
 Plotter:
   run_plot_deployment_map: false
+RadiusGridsizeMapping:
+  75:
+  - 100
+  100:
+  - 70
+  200:
+  - 36
 SUMOInterface:
   xml_parser:
     path_to_fcd_xml: ./data/fcd_files/Test/sumoTrace.xml
@@ -50,5 +51,6 @@ VanetInterface:
   input_path: /Workspace/input
   output_path: /Workspace/output
   prep_disolv_path: /Projects/Python/prep-disolv
+  raw_path: /Workspace/raw
   scenario: /koln
   track_execution_time: true

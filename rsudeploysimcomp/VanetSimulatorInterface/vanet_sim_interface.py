@@ -68,9 +68,11 @@ def run_rsu_simulator(disolv_path, configs_path):
     # print("Run Simulator")
 
 
-def run_pipeline(picked_junctions, deployment_csv_path, deployment_parquet_path, rsu_sim_interface):
+def run_pipeline(
+    picked_junctions, deployment_csv_path, deployment_parquet_path, rsu_sim_interface, algorithm_name
+):
     generate_deployment_file(picked_junctions, deployment_csv_path, deployment_parquet_path)
-    rsu_sim_interface.trigger_rsu_simulator()
+    rsu_sim_interface.trigger_rsu_simulator(algorithm_name)
     return rsu_sim_interface.get_metrics_from_simulator()
 
 
@@ -119,24 +121,26 @@ class VanetSimulatorInterface:
     def get_metrics_from_simulator(self):
         return self.parse_coverage_and_avg_distance(rsu_radius=self.rsu_radius)
 
-    def trigger_with_time_tracking(self, prep_disolv_path, disolv_path, configs_path, csv_file_path):
+    def trigger_with_time_tracking(
+        self, prep_disolv_path, disolv_path, configs_path, csv_file_path, algorithm_name
+    ):
         # 1 - prep-disolv (prepare positions file)
-        start_segment_time = time.perf_counter()
+        start_segment_time_pipe = time.perf_counter()
         prep_position_files(prep_disolv_path, configs_path)
-        end_segment_time = time.perf_counter()
-        prep_disolv_time = end_segment_time - start_segment_time
+        end_segment_time_pipe = time.perf_counter()
+        prep_disolv_time = end_segment_time_pipe - start_segment_time_pipe
 
         # 2 - disolv (prepare link file)
-        start_segment_time = time.perf_counter()
+        start_segment_time_pipe = time.perf_counter()
         prep_link_file(disolv_path, configs_path)
-        end_segment_time = time.perf_counter()
-        prep_link_time = end_segment_time - start_segment_time
+        end_segment_time_pipe = time.perf_counter()
+        prep_link_time = end_segment_time_pipe - start_segment_time_pipe
 
         # 3 - run disolv
-        start_segment_time = time.perf_counter()
+        start_segment_time_pipe = time.perf_counter()
         run_rsu_simulator(disolv_path, configs_path)
-        end_segment_time = time.perf_counter()
-        run_disolv_time = end_segment_time - start_segment_time
+        end_segment_time_pipe = time.perf_counter()
+        run_disolv_time = end_segment_time_pipe - start_segment_time_pipe
 
         with open(csv_file_path, "a", newline="") as csvfile:
             csv_writer = csv.writer(csvfile)
@@ -151,10 +155,19 @@ class VanetSimulatorInterface:
                         "num_rsus",
                         "rsu_radius",
                         "grid_size",
+                        "algorithm",
                     ]
                 )
             csv_writer.writerow(
-                [prep_disolv_time, prep_link_time, run_disolv_time, self.num_rsus, self.rsu_radius, self.grid_size]
+                [
+                    prep_disolv_time,
+                    prep_link_time,
+                    run_disolv_time,
+                    self.num_rsus,
+                    self.rsu_radius,
+                    self.grid_size,
+                    algorithm_name,
+                ]
             )
 
     def trigger(self, prep_disolv_path, disolv_path, configs_path):
@@ -165,7 +178,7 @@ class VanetSimulatorInterface:
         # 3 - run disolv
         run_rsu_simulator(disolv_path, configs_path)
 
-    def trigger_rsu_simulator(self):
+    def trigger_rsu_simulator(self, algorithm_name):
         base_path = self.config["General"]["base_path"]
         prep_disolv_path = base_path + self.config["VanetInterface"]["prep_disolv_path"]
         disolv_path = base_path + self.config["VanetInterface"]["disolv_path"]
@@ -181,6 +194,7 @@ class VanetSimulatorInterface:
                 disolv_path=disolv_path,
                 configs_path=configs_path,
                 csv_file_path=csv_file_path_run_exec_time,
+                algorithm_name=algorithm_name,
             )
         else:
             self.trigger(prep_disolv_path=prep_disolv_path, disolv_path=disolv_path, configs_path=configs_path)

@@ -3,7 +3,6 @@ import glob
 import json
 import os
 import re
-import time
 from math import sqrt
 
 import numpy as np
@@ -117,8 +116,7 @@ def extract_data_from_result_json(file_path):
     return algorithm, num_rsus, rsu_radius, coverage, avg_distance
 
 
-def track_algorith_exec_time(start_segment_time, algorithm):
-    end_segment_time = time.perf_counter()
+def track_algorithm_exec_time(start_segment_time, end_segment_time, algorithm):
     exec_time = end_segment_time - start_segment_time
     with open("ExecTime/Algorithms/algorithms_exec_time.csv", "a", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
