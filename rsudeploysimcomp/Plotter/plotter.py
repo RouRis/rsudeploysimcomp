@@ -24,6 +24,15 @@ def plot(num_rsus_range, rsu_radius_range):
     #    plot_coverage_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
     #    plot_avg_distance_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
 
+    plot_exec_time_pipeline(
+        in_file="ExecTime/Pipeline/pipeline_exec_time.csv",
+        out_file="Plots/ExecTime/pipeline_exec_time.pdf",
+    )
+    plot_exec_time_algorithm(
+        in_file="ExecTime/Algorithms/algorithms_exec_time.csv",
+        out_file="Plots/ExecTime/algorithms_exec_time.pdf",
+    )
+
 
 def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted, grid_size):
     plt.figure(figsize=(12, 8))
@@ -42,7 +51,7 @@ def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted
     plt.title("Coverage vs. Number of RSUs")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"./Plots/Coverage_over_NUM_RSU__radius{rsu_radius_wanted}_grid{grid_size}.png")
+    plt.savefig(f"./Plots/Coverage_over_NUM_RSU__radius{rsu_radius_wanted}_grid{grid_size}.pdf")
     plt.show()
 
 
@@ -62,7 +71,7 @@ def plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wa
     plt.title("Average Distance vs. Number of RSUs")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"./Plots/Avg_Distance_over_NUM_RSU_with_radius_{rsu_radius_wanted}.png")
+    plt.savefig(f"./Plots/Avg_Distance_over_NUM_RSU_with_radius_{rsu_radius_wanted}.pdf")
     plt.show()
 
 
@@ -82,7 +91,7 @@ def plot_coverage_by_algorithm_over_rsu_radius(data_by_algorithm, num_rsus_wante
     plt.title("Coverage vs. RSU Radius")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"./Plots/Coverage_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.png")
+    plt.savefig(f"./Plots/Coverage_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.pdf")
     plt.show()
 
 
@@ -102,7 +111,7 @@ def plot_avg_distance_by_algorithm_over_rsu_radius(data_by_algorithm, num_rsus_w
     plt.title("Average Distance vs. RSU Radius")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"./Plots/Avg_Distance_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.png")
+    plt.savefig(f"./Plots/Avg_Distance_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.pdf")
     plt.show()
 
 
@@ -190,9 +199,9 @@ def plot_exec_time_pipeline(in_file, out_file):
 
     # Plot the scatter plot
     plt.figure(figsize=(10, 6))
-    plt.scatter(num_rsus, prep_disolv_time, color="blue", label="Prep Dissolve Time")
+    plt.scatter(num_rsus, prep_disolv_time, color="blue", label="Prep Disolv Time")
     plt.scatter(num_rsus, prep_link_time, color="green", label="Prep Link Time")
-    plt.scatter(num_rsus, run_disolv_time, color="red", label="Run Dissolve Time")
+    plt.scatter(num_rsus, run_disolv_time, color="red", label="Run Disolv Time")
 
     # Add titles and labels
     plt.title("Execution Times vs. Number of RSUs")
@@ -214,9 +223,52 @@ def plot_exec_time_algorithm(in_file, out_file):
     # Group the data by 'algorithm' and 'rsu_radius'
     grouped = df.groupby(["algorithm", "rsu_radius"])
 
+    # Define custom colors for each algorithm
+    color_dict = {
+        "PMCP_B": "red",  # PMCP_B in red
+        "DensityBased": "green",  # Density-Based in green
+        "GARSUD": "blue",  # GARSUD in blue
+    }
+
+    # Assign different markers for each group
+    markers = ["o", "s", "D", "^", "v", "<", ">"]
+
+    for i, ((algo, radius), subset) in enumerate(grouped):
+        # Plot each group with the specified color and marker
+        plt.scatter(
+            subset["num_rsus"],
+            subset["exec_time"],
+            label=f"{algo} (Radius: {radius})",
+            color=color_dict.get(algo, "black"),  # Default to black if algorithm is not in color_dict
+            marker=markers[i % len(markers)],
+        )
+
+    # Add titles and labels
+    plt.title("Execution Time vs. Number of RSUs for Different Algorithms and RSU Radii")
+    plt.xlabel("Number of RSUs")
+    plt.ylabel("Execution Time (s)")
+    plt.legend()
+
+    # Save the plot to the output file
+    plt.savefig(out_file)
+
+    # Show the plot
+    plt.show()
+
+
+def old_plot_exec_time_algorithm(in_file, out_file):
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(in_file)
+
+    # Create a scatter plot with different markers for each combination of algorithm and RSU radius
+    plt.figure(figsize=(12, 8))
+
+    # Group the data by 'algorithm' and 'rsu_radius'
+    grouped = df.groupby(["algorithm", "rsu_radius"])
+
     # Assign different colors and markers for each group
     markers = ["o", "s", "D", "^", "v", "<", ">"]
-    colors = plt.cm.viridis_r(range(len(grouped)))
+    cmap = plt.get_cmap("viridis", len(grouped))  # Use 'viridis' colormap for distinct colors
 
     for i, ((algo, radius), subset) in enumerate(grouped):
         # Plot each group with different color and marker
@@ -224,7 +276,7 @@ def plot_exec_time_algorithm(in_file, out_file):
             subset["num_rsus"],
             subset["exec_time"],
             label=f"{algo} (Radius: {radius})",
-            color=colors[i % len(colors)],
+            color=cmap(i),
             marker=markers[i % len(markers)],
         )
 

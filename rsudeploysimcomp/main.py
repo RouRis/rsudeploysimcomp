@@ -2,7 +2,7 @@ from rsudeploysimcomp.AllJunctions.all_junctions import AllJunctions
 from rsudeploysimcomp.BranchAndBound.branch_and_bound import BranchAndBound
 from rsudeploysimcomp.DensityBased.densitybased import DensityBased
 from rsudeploysimcomp.GARSUD.garsud import GARSUD
-from rsudeploysimcomp.Plotter.plotter import Plotter, plot, plot_exec_time_algorithm, plot_exec_time_pipeline
+from rsudeploysimcomp.Plotter.plotter import Plotter, plot
 from rsudeploysimcomp.PMCP_B.pmcp_b import PMCB_P
 from rsudeploysimcomp.SUMOInterface.sumoparser import SUMOParser
 from rsudeploysimcomp.Utils.utils import get_hyperparameter, load_config, update_config
@@ -138,29 +138,27 @@ if __name__ == "__main__":
     rsu_radius_list = get_hyperparameter(conf, "rsu_radius")
     grid_size_list = get_hyperparameter(conf, "grid_size")
 
-    # Quick info message to show the picked hyperparameters
-    print("Running simulations with the following hyperparameters:")
-    print(f"  Grid Size: {grid_size_list}")
-    print(f"  RSU Radius: {rsu_radius_list}")
-    print(f"  Number of RSUs: {num_rsus_list}")
-    print("-" * 40)
+    plot_only = bool(conf["General"]["plot_only"])
 
-    for grid_size_counter in grid_size_list:
-        for rsu_radius_counter in rsu_radius_list:
-            for num_rsus_counter in num_rsus_list:
-                update_config(num_rsus_counter, rsu_radius_counter, grid_size_counter)
-                main()
-                pass
+    if not plot_only:
+        # Quick info message to show the picked hyperparameters
+        print("Running simulations with the following hyperparameters:")
+        print(f"  Grid Size: {grid_size_list}")
+        print(f"  RSU Radius: {rsu_radius_list}")
+        print(f"  Number of RSUs: {num_rsus_list}")
+        print("-" * 40)
 
-    update_config(num_rsus_list, rsu_radius_list, grid_size_list)
+        for grid_size_counter in grid_size_list:
+            for rsu_radius_counter in rsu_radius_list:
+                for num_rsus_counter in num_rsus_list:
+                    update_config(num_rsus_counter, rsu_radius_counter, grid_size_counter)
+                    main()
+                    pass
+
+        update_config(num_rsus_list, rsu_radius_list, grid_size_list)
+
+    print("Plotting...")
 
     plot(num_rsus_list, rsu_radius_list)
 
-    plot_exec_time_pipeline(
-        in_file="ExecTime/Pipeline/pipeline_exec_time.csv",
-        out_file="Plots/ExecTime/pipeline_exec_time.png",
-    )
-    plot_exec_time_algorithm(
-        in_file="ExecTime/Algorithms/algorithms_exec_time.csv",
-        out_file="Plots/ExecTime/algorithms_exec_time.png",
-    )
+    print("Plots generated")

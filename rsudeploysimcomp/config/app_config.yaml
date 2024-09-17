@@ -15,18 +15,24 @@ Algorithms:
     optimization_param:
       avg_distance: false
       coverage: true
-    run: true
+    run: false
     sol_per_pop: 20
     track_exec_time: true
   PMCP_B:
     run: false
     track_exec_time: true
 General:
+  plot_only: true
   base_path: /Users/rouvenrischert
-  grid_size: 100
-  num_rsus: 700
+  grid_size:
+  - 36
+  num_rsus:
+  - 400
+  - 600
+  - 800
   plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
-  rsu_radius: 75
+  rsu_radius:
+  - 200
   rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
   track_exec_time: true
 Plotter:
