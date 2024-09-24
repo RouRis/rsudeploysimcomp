@@ -18,11 +18,6 @@ def plot(num_rsus_range, rsu_radius_range):
         grid_size = config["RadiusGridsizeMapping"][rsu_radius]
         # Plot the data for each algorithm
         plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius, grid_size)
-    #    plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius)
-
-    # for num_rsus in num_rsus_range:
-    #    plot_coverage_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
-    #    plot_avg_distance_by_algorithm_over_rsu_radius(data_by_rsu_radius, num_rsus)
 
     plot_exec_time_pipeline(
         in_file="ExecTime/Pipeline/pipeline_exec_time.csv",
@@ -32,159 +27,64 @@ def plot(num_rsus_range, rsu_radius_range):
         in_file="ExecTime/Algorithms/algorithms_exec_time.csv",
         out_file="Plots/ExecTime/algorithms_exec_time.pdf",
     )
+    plot_best_solutions(
+        in_file="best_solutions.csv",
+        out_file="Plots/GARSUD/best_solutions.pdf",
+    )
 
 
 def plot_coverage_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted, grid_size):
+    # Define a dictionary with fixed colors for each algorithm
+    algorithm_colors = {
+        "Density-Based": "green",  # Sort this alphabetically
+        "GARSUD": "blue",
+        "PMCP_B": "red",
+    }
+
     plt.figure(figsize=(12, 8))
+
+    # Store data for plotting in a list so that we can ensure alphabetical order
+    plot_data = []
+
     for (algorithm, rsu_radius), data in data_by_num_rsus.items():
         if rsu_radius_wanted == rsu_radius:
-            plt.plot(
-                data["num_rsus"],
-                data["coverage"],
-                marker="o",
-                linestyle="-",
-                label=algorithm + " rsu_radius:" + str(rsu_radius_wanted),
-            )
+            color = algorithm_colors.get(algorithm, "black")  # Default to black if algorithm not in dictionary
+            plot_data.append((algorithm, data, color))
 
-    plt.xlabel("Number of RSUs")
-    plt.ylabel("Coverage (%)")
-    plt.title("Coverage vs. Number of RSUs")
-    plt.legend()
+    # Sort the plot data by algorithm name alphabetically
+    plot_data.sort(key=lambda x: x[0])
+
+    # Plot each algorithm's data after sorting alphabetically
+    for algorithm, data, color in plot_data:
+        plt.plot(
+            data["num_rsus"],
+            data["coverage"],
+            marker="o",
+            linestyle="-",
+            linewidth=3,  # Increase line thickness
+            label=f"{algorithm}",  # Only algorithm name in the legend
+            color=color,
+        )
+
+    # Set axis limits as requested
+    plt.xlim([0, 1050])
+    plt.ylim([0, 100])  # Set y-axis from 0 to 100%
+
+    # Increase font size for labels and titles
+    plt.xlabel("Number of RSUs", fontsize=16)
+    plt.ylabel("Coverage (%)", fontsize=16)
+    plt.title("Coverage vs. Number of RSUs", fontsize=16)
+
+    plt.tick_params(axis="both", which="major", labelsize=16)
+
+    # Increase the font size of the legend and display it
+    plt.legend(fontsize=12)
+
+    # Add grid for easier interpretation of the plot
     plt.grid(True)
+
+    # Save the figure
     plt.savefig(f"./Plots/Coverage_over_NUM_RSU__radius{rsu_radius_wanted}_grid{grid_size}.pdf")
-    plt.show()
-
-
-def plot_avg_distance_by_algorithm_over_num_rsus(data_by_num_rsus, rsu_radius_wanted):
-    plt.figure(figsize=(12, 8))
-    for (algorithm, rsu_radius), data in data_by_num_rsus.items():
-        if rsu_radius_wanted == rsu_radius:
-            plt.plot(
-                data["num_rsus"],
-                [abs(el) for el in data["avg_distance"]],
-                marker="o",
-                linestyle="-",
-                label=algorithm + " rsu_radius:" + str(rsu_radius_wanted),
-            )
-    plt.xlabel("Number of RSUs")
-    plt.ylabel("Average Distance")
-    plt.title("Average Distance vs. Number of RSUs")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"./Plots/Avg_Distance_over_NUM_RSU_with_radius_{rsu_radius_wanted}.pdf")
-    plt.show()
-
-
-def plot_coverage_by_algorithm_over_rsu_radius(data_by_algorithm, num_rsus_wanted):
-    plt.figure(figsize=(12, 8))
-    for (algorithm, num_rsus), data in data_by_algorithm.items():
-        if num_rsus_wanted == num_rsus:
-            plt.plot(
-                data["rsu_radius"],
-                data["coverage"],
-                marker="o",
-                linestyle="-",
-                label=algorithm + " num_rsus:" + str(num_rsus_wanted),
-            )
-    plt.xlabel("RSU Radius")
-    plt.ylabel("Coverage (%)")
-    plt.title("Coverage vs. RSU Radius")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"./Plots/Coverage_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.pdf")
-    plt.show()
-
-
-def plot_avg_distance_by_algorithm_over_rsu_radius(data_by_algorithm, num_rsus_wanted):
-    plt.figure(figsize=(12, 8))
-    for (algorithm, num_rsus), data in data_by_algorithm.items():
-        if num_rsus_wanted == num_rsus:
-            plt.plot(
-                data["rsu_radius"],
-                [abs(el) for el in data["avg_distance"]],
-                marker="o",
-                linestyle="-",
-                label=algorithm + " num_rsus:" + str(num_rsus_wanted),
-            )
-    plt.xlabel("RSU Radius")
-    plt.ylabel("Average Distance")
-    plt.title("Average Distance vs. RSU Radius")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"./Plots/Avg_Distance_over_RSU_Radius_with_num_rsus_{num_rsus_wanted}.pdf")
-    plt.show()
-
-
-def plot_coverage_per_timestep(file_path):
-    # Step 1: Read the JSON file
-    with open(file_path, "r") as f:
-        data = json.load(f)
-
-    # Step 2: Extract the coverage per timestep data
-    coverage_per_timestep = data["coverage_per_timestep"]
-
-    # Step 3: Plot the data
-    plt.figure(figsize=(10, 6))
-    plt.plot(coverage_per_timestep, marker="o", linestyle="-", color="b")
-    plt.xlabel("Time Step")
-    plt.ylabel("Coverage (%)")
-    plt.title("Coverage Over Time Steps")
-    plt.grid(True)
-    plt.show()
-
-
-def plot_avg_distance_per_timestep(file_path):
-    # Step 1: Read the JSON file
-    with open(file_path, "r") as f:
-        data = json.load(f)
-
-    # Step 2: Extract the average distance per timestep data
-    avg_distance_per_timestep = data["avg_distance_per_timestep"]
-
-    # Step 3: Plot the data
-    plt.figure(figsize=(10, 6))
-    plt.plot(avg_distance_per_timestep, marker="o", linestyle="-", color="r")
-    plt.xlabel("Time Step")
-    plt.ylabel("Average Distance")
-    plt.title("Average Distance Over Time Steps")
-    plt.grid(True)
-    plt.show()
-
-
-def plot_coverage_histogram(file_path):
-    # Step 1: Read the JSON file
-    with open(file_path, "r") as f:
-        data = json.load(f)
-
-    # Step 2: Extract the coverage and average distance data
-    coverage_per_timestep = data["coverage_per_timestep"]
-
-    # Step 3: Plot the histogram
-    plt.figure(figsize=(6, 6))
-    plt.hist(coverage_per_timestep, bins=20, color="b", alpha=0.7)
-    plt.xlabel("Coverage (%)")
-    plt.ylabel("Frequency")
-    plt.title("Histogram of Coverage Over Time Steps")
-    plt.grid(True)
-    plt.show()
-
-
-def plot_avg_distance_histogram(file_path):
-    # Step 1: Read the JSON file
-    with open(file_path, "r") as f:
-        data = json.load(f)
-
-    # Step 2: Extract the coverage and average distance data
-    avg_distance_per_timestep = data["avg_distance_per_timestep"]
-
-    # Step 3: Plot the histogram
-    plt.figure(figsize=(6, 6))
-    plt.hist(avg_distance_per_timestep, bins=20, color="r", alpha=0.7)
-    plt.xlabel("Average Distance")
-    plt.ylabel("Frequency")
-    plt.title("Histogram of Average Distance Over Time Steps")
-    plt.grid(True)
-    plt.show()
 
 
 def plot_exec_time_pipeline(in_file, out_file):
@@ -199,14 +99,16 @@ def plot_exec_time_pipeline(in_file, out_file):
 
     # Plot the scatter plot
     plt.figure(figsize=(10, 6))
-    plt.scatter(num_rsus, prep_disolv_time, color="blue", label="Prep Disolv Time")
-    plt.scatter(num_rsus, prep_link_time, color="green", label="Prep Link Time")
-    plt.scatter(num_rsus, run_disolv_time, color="red", label="Run Disolv Time")
+    plt.scatter(num_rsus, prep_disolv_time, color="blue", label="prep-disolv")
+    plt.scatter(num_rsus, prep_link_time, color="green", label="link-disolv")
+    plt.scatter(num_rsus, run_disolv_time, color="red", label="run-disolv")
 
     # Add titles and labels
-    plt.title("Execution Times vs. Number of RSUs")
-    plt.xlabel("Number of RSUs")
-    plt.ylabel("Execution Time (s)")
+    plt.title("Execution Times vs. Number of RSUs", fontsize=16)
+    plt.xlabel("Number of RSUs", fontsize=16)
+    plt.ylabel("Execution Time (s)", fontsize=16)
+    plt.tick_params(axis="both", which="major", labelsize=16)
+
     plt.legend()
 
     # Show the plot
@@ -244,53 +146,33 @@ def plot_exec_time_algorithm(in_file, out_file):
         )
 
     # Add titles and labels
-    plt.title("Execution Time vs. Number of RSUs for Different Algorithms and RSU Radii")
-    plt.xlabel("Number of RSUs")
-    plt.ylabel("Execution Time (s)")
+    plt.title("Execution Time vs. Number of RSUs for Different Algorithms and RSU Radii", fontsize=16)
+    plt.xlabel("Number of RSUs", fontsize=16)
+    plt.ylabel("Execution Time (s)", fontsize=16)
+    plt.tick_params(axis="both", which="major", labelsize=16)
+
     plt.legend()
 
     # Save the plot to the output file
     plt.savefig(out_file)
 
-    # Show the plot
-    plt.show()
 
-
-def old_plot_exec_time_algorithm(in_file, out_file):
-    # Load the CSV file into a DataFrame
+def plot_best_solutions(in_file, out_file):
+    # Load the CSV file into a pandas DataFrame
     df = pd.read_csv(in_file)
 
-    # Create a scatter plot with different markers for each combination of algorithm and RSU radius
-    plt.figure(figsize=(12, 8))
+    # Plotting the data
+    plt.figure(figsize=(10, 6))
+    plt.plot(df["Generation"], df["Best Solution"], marker="o", color="b", linestyle="-", markersize=4)
+    plt.title("Best Solution Over Generations", fontsize=16)
+    plt.xlabel("Generation", fontsize=16)
+    plt.ylabel("Best Solution Coverage (%)", fontsize=16)
+    plt.tick_params(axis="both", which="major", labelsize=16)
 
-    # Group the data by 'algorithm' and 'rsu_radius'
-    grouped = df.groupby(["algorithm", "rsu_radius"])
+    plt.grid(True)
+    plt.tight_layout()
 
-    # Assign different colors and markers for each group
-    markers = ["o", "s", "D", "^", "v", "<", ">"]
-    cmap = plt.get_cmap("viridis", len(grouped))  # Use 'viridis' colormap for distinct colors
-
-    for i, ((algo, radius), subset) in enumerate(grouped):
-        # Plot each group with different color and marker
-        plt.scatter(
-            subset["num_rsus"],
-            subset["exec_time"],
-            label=f"{algo} (Radius: {radius})",
-            color=cmap(i),
-            marker=markers[i % len(markers)],
-        )
-
-    # Add titles and labels
-    plt.title("Execution Time vs. Number of RSUs for Different Algorithms and RSU Radii")
-    plt.xlabel("Number of RSUs")
-    plt.ylabel("Execution Time (s)")
-    plt.legend()
-
-    # Save the plot to the output file
     plt.savefig(out_file)
-
-    # Show the plot
-    plt.show()
 
 
 class Plotter:

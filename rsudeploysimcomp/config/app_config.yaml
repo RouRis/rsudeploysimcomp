@@ -10,29 +10,27 @@ Algorithms:
     track_exec_time: true
   GARSUD:
     keep_parents: 10
-    num_generations: 40
+    num_generations: 100
     num_parents_mating: 10
     optimization_param:
       avg_distance: false
       coverage: true
-    run: false
+    run: true
     sol_per_pop: 20
     track_exec_time: true
   PMCP_B:
     run: false
     track_exec_time: true
 General:
-  plot_only: true
   base_path: /Users/rouvenrischert
   grid_size:
-  - 36
+  - 100
   num_rsus:
-  - 400
-  - 600
-  - 800
-  plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
-  rsu_radius:
   - 200
+  plot_map_path: /rsudeploysimcomp/Plots/DeploymentMaps
+  plot_only: true
+  rsu_radius:
+  - 75
   rsudeploysimcomp_path: /Projects/Python/rsudeploysimcomp
   track_exec_time: true
 Plotter:

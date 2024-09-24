@@ -1,3 +1,4 @@
+import csv
 import random
 import time
 from collections import OrderedDict
@@ -28,6 +29,7 @@ class GARSUD:
         self.best_solution = None
         self.cache_use_counter = 0
         self.fitness_cache = OrderedDict()
+        self.pipeline_counter = 0
 
         self.num_rsus = self.config["General"]["num_rsus"]
         self.grid_size = self.config["General"]["grid_size"]
@@ -71,6 +73,7 @@ class GARSUD:
             print(f"Fitness cache hit - #{self.cache_use_counter}")
             coverage, avg_distance = self.fitness_cache[solution_tuple]
         else:
+            self.pipeline_counter += 1
             # Calculate the fitness if not in cache
             coverage, avg_distance = self.solution_to_metrics(solution)
         self.fitness_cache[solution_tuple] = (coverage, avg_distance)
@@ -90,21 +93,40 @@ class GARSUD:
             print(f"    Fitness of the best solution so far: {solution_fitness}")
             self.picked_junctions = self.grid_index_to_junction_coordinates(solution)
 
+            num_generation = ga_instance.generations_completed
+            if num_generation in [1, 2, 3, 10, 20, 100]:
+                # TODO: Delete again after Debugging
+                self.solution_to_metrics(solution)
+                print("waiting for uploading directory by hand...")
+                print("Continue running")
+
+            # Save the best solution and fitness of the current generation to a CSV file
+            with open("best_solutions.csv", mode="a", newline="") as file:
+                writer = csv.writer(file)
+                if ga_instance.generations_completed == 1:
+                    # Write the header only for the first generation
+                    writer.writerow(["Generation", "Best Solution", "Fitness"])
+                writer.writerow([ga_instance.generations_completed, solution_fitness])
+
         # Create an instance of the pygad.GA class with the parameters defined above
         self.ga_instance = pygad.GA(
-            num_generations=self.num_generations,
-            num_parents_mating=self.num_parents_mating,
-            fitness_func=self.fitness_func,
-            sol_per_pop=self.sol_per_pop,
-            num_genes=self.num_rsus,
-            initial_population=self.initial_population,
-            parent_selection_type="tournament",  # Steady State Selection
-            keep_parents=self.keep_parents,  # Number of parents to keep in the next population
-            crossover_type="single_point",
-            mutation_type="random",
-            mutation_probability=self.mutation_probability,
-            gene_space=range(0, self.number_locations),
-            on_generation=on_generation,
+            num_generations=self.num_generations,  # The number of generations to evolve through
+            num_parents_mating=self.num_parents_mating,  # The number of parents selected for mating to produce
+            # offspring
+            fitness_func=self.fitness_func,  # The fitness function that evaluates how good each solution is
+            sol_per_pop=self.sol_per_pop,  # The number of solutions in each population (population size)
+            num_genes=self.num_rsus,  # The number of genes in each solution (representing RSUs here)
+            initial_population=self.initial_population,  # The initial set of solutions (population) to start with
+            parent_selection_type="tournament",  # The method used to select parents for mating;
+            # "tournament" selects parents based on competitions
+            keep_parents=self.keep_parents,  # The number of parents to keep unchanged in the next population
+            crossover_type="single_point",  # The type of crossover operation; "single_point" uses one point to
+            # combine parents’ genes
+            mutation_type="random",  # The type of mutation applied; "random" mutates random genes in the offspring
+            mutation_probability=self.mutation_probability,  # The probability of each gene being mutated
+            gene_space=range(0, self.number_locations),  # The possible values each gene (RSU location) can take
+            on_generation=on_generation,  # A callback function executed at the end of each generation,
+            # often used for tracking progress
         )
 
     def run(self):
@@ -132,6 +154,8 @@ class GARSUD:
         if self.track_exec_time:
             end_segment_time_alg = time.perf_counter()
             track_algorithm_exec_time(start_segment_time_alg, end_segment_time_alg, self)
+
+        print(f"Number of Pipeline-Calls: {self.pipeline_counter}")
 
     def grid_index_to_junction_coordinates(self, solution):
         junctions = []
