@@ -81,18 +81,18 @@ Um sicherzustellen, dass der Code korrekt ausgeführt werden kann, ist die folge
 
 ```plaintext
 /home/
-└── Projects/
-    ├── Python/
-    │   ├── prep-disolv/
-    │   └── rsudeploysimcomp/
-    └── Rust/
-        └── disolv/
+   Projects/
+      Python/
+         prep-disolv/
+         rsudeploysimcomp/
+      Rust/
+         disolv/
     
-└── Workspace/
-    ├── configs/
-    ├── input/
-    ├── output/
-    └── raw/
+   Workspace/
+       configs/
+       input/
+       output/
+       raw/
 
 
 
