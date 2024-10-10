@@ -77,10 +77,6 @@ Sobald die Komponenten heruntergeladen und an den richtigen Stellen abgelegt wur
 
 ## Verzeichnisstruktur
 
-Damit der Code reibungslos ausgeführt werden kann, ist eine bestimmte Verzeichnisstruktur erforderlich. Überprüfe, ob die Verzeichnisse richtig angelegt sind und dass alle Dateien und Komponenten am richtigen Ort abgelegt sind.
-
-## Verzeichnisstruktur
-
 Um sicherzustellen, dass der Code korrekt ausgeführt werden kann, ist die folgende Verzeichnisstruktur erforderlich. Diese Struktur hilft, alle Ressourcen an den richtigen Orten abzulegen.
 
 ```plaintext
