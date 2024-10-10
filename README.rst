@@ -79,7 +79,6 @@ Sobald die Komponenten heruntergeladen und an den richtigen Stellen abgelegt wur
 
 Um sicherzustellen, dass der Code korrekt ausgeführt werden kann, ist die folgende Verzeichnisstruktur erforderlich. Diese Struktur hilft, alle Ressourcen an den richtigen Orten abzulegen.
 
-```plaintext
 /home/
    Projects/
       Python/
